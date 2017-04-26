@@ -8,14 +8,26 @@ void instruction_fetch(unsigned int pc,IFID_Reg *IFID){
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
   // Bit mast elements out of instruction
-  IDEX->Opcode = IFID->instruction >> 26;
+  IDEX->Opcode = (IFID->instruction >> 26) & 0x3F;
   if((IDEX->Opcode == 2) || (IDEX->Opcode == 3)){
     IDEX->jumpaddress = IFID->instruction & 0x3FFFFFF;
+    IDEX->RegDst = 0;
+    IDEX->Branch = 0;
+    IDEX->MemRead = 0;
+    IDEX->MemWrite = 0;
+    IDEX->RegWrite = 0;
+    IDEX->MemtoReg = 0;
   }
   else{
     IDEX->Rs = (IFID->instruction >> 21) & 0x1F;
     IDEX->Rt = (IFID->instruction >> 16) & 0x1F;
     if(IDEX->Opcode == 0){
+      IDEX->RegDst = 1;
+      IDEX->Branch = 0;
+      IDEX->MemRead = 0;
+      IDEX->MemWrite = 0;
+      IDEX->RegWrite = 1;
+      IDEX->MemtoReg = 0;
       IDEX->Rd = (IFID->instruction >> 11) & 0x1F;
       IDEX->shamtl = (IFID->instruction >> 6) & 0x1F;
       IDEX->funct = IFID->instruction & 0x3F;
@@ -36,9 +48,13 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 
   // Pass through PC
   IDEX->PCplus1 = IFID->PCplus1;
+
+
 }
 
 void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
+
+  EXMEM->branchPC = IDEX->PCplus1+IDEX->immediate;
 
   // R-type instructions
   if(IDEX->Opcode == 0){
@@ -123,17 +139,74 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     // bgtz (wtf is this shit)
     // bltz (again wtf)
     // blez (okay for real wtf)
-    // lb
-    
-
+    // lb (not sure what to do for bytes)
+    case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    break;
+    // lbu
+    // lhu
+    // lui
+    // lw
+    case 35: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    EXMEM->MemRead = 1;
+    EXMEM->MemtoReg = 1;
+    break;
+    // ori
+    case 13: EXMEM->aluResult = IDEX->readRs | IDEX->immediate;
+    break;
+    // slti
+    case 10: EXMEM->aluResult = (IDEX->readRs < IDEX->immediate) ? 1:0;
+    break;
+    // sltiu (not sure what to change here)
+    case 11: EXMEM->aluResult = (IDEX->readRs < IDEX->immediate) ? 1:0;
+    break;
+    // sb
+    // sh
+    // sw
+    case 43: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    EXMEM->MemWrite = 1;
+    break;
+    // seb
   }
+
   EXMEM->readRt = IDEX->readRt;
+  if(IDEX->RegDst){
+    EXMEM->writeReg = IDEX->Rd;
+  }
+  else{
+    EXMEM->writeReg = IDEX->Rt;
+  }
+
+  EXMEM->Branch = IDEX->Branch;
+  EXMEM->MemRead = IDEX->MemRead;
+  EXMEM->MemWrite = IDEX->MemWrite;
+  EXMEM->RegWrite = IDEX->RegWrite;
+  EXMEM->MemtoReg = IDEX->MemtoReg;
+
 }
 
 void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
+  // Read from memory
+  if(EXMEM->MemRead){
+    MEMWB->readData = memory[EXMEM->aluResult];
+  }
+  // Write to memory
+  if(EXMEM->MemWrite){
+    memory[EXMEM->aluResult] = EXMEM->readRt;
+  }
+  if(EXMEM->Branch){
 
+  }
+  MEMWB->writeReg = EXMEM->writeReg;
+  MEMWB->MemtoReg = EXMEM->MemtoReg;
+  MEMWB->aluResult = EXMEM->aluResult;
+  MEMWB->RegWrite = EXMEM->RegWrite;
 }
 
 void write_back(MEMWB_Reg *MEMWB){
-
+  if(MEMWB->MemtoReg){
+    registers[MEMWB->writeReg] = MEMWB->readData;
+  }
+  else{
+    registers[MEMWB->writeReg] = MEMWB->aluResult;
+  }
 }

@@ -22,6 +22,13 @@ struct IDEX_Reg {
   int readRt;
   int immediate;
 
+  bool RegDst;
+  bool Branch;
+  bool MemRead;
+  bool MemWrite;
+  bool RegWrite;
+  bool MemtoReg;
+
 }IDEX;
 
 struct EXMEM_Reg {
@@ -35,6 +42,16 @@ struct EXMEM_Reg {
   unsigned int jumpaddress;
   int readRt;
   int aluResult;
+
+  unsigned int branchPC;
+
+  unsigned int writeReg;
+
+  bool Branch;
+  bool MemRead;
+  bool MemWrite;
+  bool RegWrite;
+  bool MemtoReg;
 }EXMEM;
 
 struct MEMWB_Reg {
@@ -48,4 +65,9 @@ struct MEMWB_Reg {
   unsigned int jumpaddress;
   int readData;
   int aluResult;
+
+  unsigned int writeReg;
+
+  bool RegWrite;
+  bool MemtoReg;
 }MEMWB;
