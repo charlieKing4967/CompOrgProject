@@ -21,6 +21,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
   else{
     IDEX->Rs = (IFID->instruction >> 21) & 0x1F;
     IDEX->Rt = (IFID->instruction >> 16) & 0x1F;
+    // R-type instructions
     if(IDEX->Opcode == 0){
       IDEX->RegDst = 1;
       IDEX->Branch = 0;
@@ -34,6 +35,42 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     }
     else{
       IDEX->immediate = IFID->instruction & 0xFFFF;
+      // Branch instructions
+      if((IDEX->Opcode >= 4) && (IDEX->Opcode <= 7)){
+        IDEX->RegDst = 0;
+        IDEX->Branch = 1;
+        IDEX->MemRead = 0;
+        IDEX->MemWrite = 0;
+        IDEX->RegWrite = 0;
+        IDEX->MemtoReg = 0;
+      }
+      // Load instructions
+      if((IDEX->Opcode >= 32) && (IDEX->Opcode <= 38)){
+        IDEX->RegDst = 0;
+        IDEX->Branch = 0;
+        IDEX->MemRead = 1;
+        IDEX->MemWrite = 0;
+        IDEX->RegWrite = 1;
+        IDEX->MemtoReg = 1;
+      }
+      // Store instructions
+      if((IDEX->Opcode >= 40) && (IDEX->Opcode <= 46)){
+        IDEX->RegDst = 0;
+        IDEX->Branch = 0;
+        IDEX->MemRead = 0;
+        IDEX->MemWrite = 1;
+        IDEX->RegWrite = 0;
+        IDEX->MemtoReg = 0;
+      }
+      // Immediate Arithmetic instructions
+      if((IDEX->Opcode >= 8) && (IDEX->Opcode <= 15)){
+        IDEX->RegDst = 0;
+        IDEX->Branch = 0;
+        IDEX->MemRead = 0;
+        IDEX->MemWrite = 0;
+        IDEX->RegWrite = 1;
+        IDEX->MemtoReg = 0;
+      }
     }
   }
 
@@ -147,8 +184,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     // lui
     // lw
     case 35: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
-    EXMEM->MemRead = 1;
-    EXMEM->MemtoReg = 1;
     break;
     // ori
     case 13: EXMEM->aluResult = IDEX->readRs | IDEX->immediate;
@@ -163,7 +198,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     // sh
     // sw
     case 43: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
-    EXMEM->MemWrite = 1;
     break;
     // seb
   }
