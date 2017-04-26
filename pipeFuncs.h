@@ -40,15 +40,29 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
 
   if(IDEX->Opcode == 0){
     switch (IDEX->funct){
+      // add
       case 32: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
+      // addu (not sure what's different)
       case 33: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
+      // and
       case 36: EXMEM->aluResult = IDEX->readRs & IDEX->readRt;
-      // Not sure about this one
+      // jr (Not sure about this one)
       case 8:  EXMEM->PCplus1 = IDEX->readRs;
+      // nor
       case 39: EXMEM->aluResult = ~(IDEX->readRs | IDEX->readRt);
+      // or
       case 37: EXMEM->aluResult = IDEX->readRs | IDEX->readRt;
       // movn?
       // movz?
+      // slt
+      case 42: EXMEN->aluResult = (R[rs] < R[rt]) ? 1 : 0;
+      // sltu (nned to sign-extend)
+      //case 43: EXMEN->aluResult =
+      // sll
+      case 0: EXMEN->aluResult = IDEX->readRt << IDEX->shamtl;
+      // srl
+      case 2: EXMEN->aluResult = IDEX->readRt >> IDEX->shamtl;
+      
 
     }
   }
