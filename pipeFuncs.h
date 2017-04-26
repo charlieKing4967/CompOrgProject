@@ -23,32 +23,42 @@ void instruction_fetch(unsigned int pc,IFID_Reg *IFID){
   IFID->PCplus1 = pc+1;
 }
 
-void instruction_decode(IFID_Reg IFID,IDEX_Reg IDEX){
-
-  //reg_read(IFID.Rs, IDEX.readRs);
-  //reg_read(IFID.Rt, IDEX.readRt);
-
+void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 
   // Need to sign extend
-  if(IFID.immediate >> 15){
-    IDEX.immediate = IFID.immediate + 0xFFFF0000;
+  if(IFID->immediate >> 15){
+    IDEX->immediate = IFID->immediate + 0xFFFF0000;
   }
   else{
-    IDEX.immediate = IFID.immediate;
+    IDEX->immediate = IFID->immediate;
   }
 
-  IFID.PCplus1 = IDEX.PCplus1;
+  IFID->PCplus1 = IDEX->PCplus1;
 }
 
-void execute(IDEX_Reg IDEX,EXMEM_Reg EXMEM){
+void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
 
-  EXMEM.readRt = IDEX.readRt;
+  if(IDEX->Opcode == 0){
+    switch (IDEX->funct){
+      case 32: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
+      case 33: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
+      case 36: EXMEM->aluResult = IDEX->readRs & IDEX->readRt;
+      // Not sure about this one
+      case 8:  EXMEM->PCplus1 = IDEX->readRs;
+      case 39: EXMEM->aluResult = ~(IDEX->readRs | IDEX->readRt);
+      case 37: EXMEM->aluResult = IDEX->readRs | IDEX->readRt;
+      // movn?
+      // movz?
+
+    }
+  }
+  EXMEM->readRt = IDEX->readRt;
 }
 
-void memory_access(EXMEM_Reg EXMEM,MEMWB_Reg MEMWB){
+void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 
 }
 
-void write_back(MEMWB_Reg MEMWB){
+void write_back(MEMWB_Reg *MEMWB){
 
 }

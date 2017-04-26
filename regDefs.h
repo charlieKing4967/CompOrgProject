@@ -2,6 +2,7 @@ unsigned int pc;
 
 int memory[10000];
 
+
 struct IFID_Reg {
   unsigned int PCplus1;
   unsigned int Opcode;
