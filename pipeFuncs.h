@@ -1,25 +1,26 @@
 #include "regDefs.h"
 
-void instruction_fetch(unsigned int pc,IFID_Reg IFID){
+
+void instruction_fetch(unsigned int pc,IFID_Reg *IFID){
   int instruction = memory[pc];
-  IFID.Opcode = instruction >> 26;
-  if((IFID.Opcode == 2) || (IFID.Opcode == 3)){
-    IFID.jumpaddress = instruction & 0x3FFFFFF;
+  IFID->Opcode = instruction >> 26;
+  if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
+    IFID->jumpaddress = instruction & 0x3FFFFFF;
   }
   else{
-    IFID.Rs = (instruction >> 21) & 0x1F;
-    IFID.Rt = (instruction >> 16) & 0x1F;
-    if(IFID.Opcode == 0){
-      IFID.Rd = (instruction >> 11) & 0x1F;
-      IFID.shamtl = (instruction >> 6) & 0x1F;
-      IFID.funct = instruction & 0x3F;
+    IFID->Rs = (instruction >> 21) & 0x1F;
+    IFID->Rt = (instruction >> 16) & 0x1F;
+    if(IFID->Opcode == 0){
+      IFID->Rd = (instruction >> 11) & 0x1F;
+      IFID->shamtl = (instruction >> 6) & 0x1F;
+      IFID->funct = instruction & 0x3F;
     }
     else{
-      IFID.immediate = instruction & 0xFFFF;
+      IFID->immediate = instruction & 0xFFFF;
     }
   }
 
-  IFID.PCplus1 = pc+1;
+  IFID->PCplus1 = pc+1;
 }
 
 void instruction_decode(IFID_Reg IFID,IDEX_Reg IDEX){
@@ -40,12 +41,6 @@ void instruction_decode(IFID_Reg IFID,IDEX_Reg IDEX){
 }
 
 void execute(IDEX_Reg IDEX,EXMEM_Reg EXMEM){
-  if(IDEX.ALUSrc){
-    alu(EXMEM.aluResult, IDEX.readRs, IDEX.immediate);
-  }
-  else{
-    alu(EXMEM.aluResult, IDEX.readRs, IDEX.readRt);
-  }
 
   EXMEM.readRt = IDEX.readRt;
 }

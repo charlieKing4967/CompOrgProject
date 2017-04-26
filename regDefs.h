@@ -12,7 +12,7 @@ struct IFID_Reg {
   unsigned int funct;
   short int immediate;
   unsigned int jumpaddress;
-} IFID;
+};
 
 struct IDEX_Reg {
   unsigned int PCplus1;

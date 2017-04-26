@@ -5,6 +5,14 @@
 
 using namespace std;
 
+IFID_Reg IFID;
+
 int main(){
+  pc = 0;
+  memory[0] = 0x012A4820;
+  instruction_fetch(pc,&IFID);
+  cout << IFID.funct;
+
+
   return 0;
 }
