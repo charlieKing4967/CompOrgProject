@@ -1,18 +1,12 @@
 unsigned int pc;
 
 int memory[10000];
+int registers[32];
 
 
 struct IFID_Reg {
+  int instruction;
   unsigned int PCplus1;
-  unsigned int Opcode;
-  unsigned int Rs;
-  unsigned int Rt;
-  unsigned int Rd;
-  unsigned int shamtl;
-  unsigned int funct;
-  short int immediate;
-  unsigned int jumpaddress;
 };
 
 struct IDEX_Reg {
