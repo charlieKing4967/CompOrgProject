@@ -248,10 +248,12 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 }
 
 void write_back(MEMWB_Reg *MEMWB){
-  if(MEMWB->MemtoReg){
-    registers[MEMWB->writeReg] = MEMWB->readData;
-  }
-  else{
-    registers[MEMWB->writeReg] = MEMWB->aluResult;
+  if(MEMWB->RegWrite){
+    if(MEMWB->MemtoReg){
+      registers[MEMWB->writeReg] = MEMWB->readData;
+    }
+    else{
+      registers[MEMWB->writeReg] = MEMWB->aluResult;
+    }
   }
 }
