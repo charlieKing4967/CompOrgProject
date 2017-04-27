@@ -1,9 +1,11 @@
 #include "regDefs.h"
 
 
-void instruction_fetch(unsigned int pc,IFID_Reg *IFID){
+void instruction_fetch(IFID_Reg *IFID){
   IFID->instruction = memory[pc];
-  IFID->PCplus1 = pc+1;
+  pc++;
+  IFID->PCplus1 = pc;
+
 }
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
@@ -235,10 +237,10 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     memory[EXMEM->aluResult] = EXMEM->readRt;
   }
 
-  pc = EXMEM->PCplus1;
   if(EXMEM->Branch && EXMEM->aluResult){
-    pc = pc+EXMEM->branchPC;
+    pc = EXMEM->branchPC;
   }
+
   MEMWB->writeReg = EXMEM->writeReg;
   MEMWB->MemtoReg = EXMEM->MemtoReg;
   MEMWB->aluResult = EXMEM->aluResult;

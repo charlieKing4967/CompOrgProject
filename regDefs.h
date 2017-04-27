@@ -29,7 +29,7 @@ struct IDEX_Reg {
   bool RegWrite;
   bool MemtoReg;
 
-}IDEX;
+};
 
 struct EXMEM_Reg {
   unsigned int PCplus1;
@@ -52,7 +52,7 @@ struct EXMEM_Reg {
   bool MemWrite;
   bool RegWrite;
   bool MemtoReg;
-}EXMEM;
+};
 
 struct MEMWB_Reg {
   unsigned int PCplus1;
@@ -70,4 +70,4 @@ struct MEMWB_Reg {
 
   bool RegWrite;
   bool MemtoReg;
-}MEMWB;
+};
