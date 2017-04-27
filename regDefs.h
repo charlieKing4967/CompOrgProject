@@ -1,12 +1,24 @@
 unsigned int pc;
+bool stall;
 
+// Need to make byte addressable
+//uint8_t memory[40000];
 int memory[10000];
-int registers[32];
+uint32_t programMemory[10000];
+uint32_t registers[32];
 
 
 struct IFID_Reg {
-  int instruction;
   unsigned int PCplus1;
+
+  unsigned int Opcode;
+  unsigned int Rs;
+  unsigned int Rt;
+  unsigned int Rd;
+  unsigned int shamtl;
+  unsigned int funct;
+  unsigned int jumpaddress;
+  unsigned int immediate;
 };
 
 struct IDEX_Reg {
@@ -18,9 +30,9 @@ struct IDEX_Reg {
   unsigned int shamtl;
   unsigned int funct;
   unsigned int jumpaddress;
-  int readRs;
-  int readRt;
-  int immediate;
+  uint32_t readRs;
+  uint32_t readRt;
+  uint32_t immediate;
 
   bool RegDst;
   bool Branch;
@@ -40,8 +52,8 @@ struct EXMEM_Reg {
   unsigned int shamtl;
   unsigned int funct;
   unsigned int jumpaddress;
-  int readRt;
-  int aluResult;
+  uint32_t readRt;
+  uint32_t aluResult;
 
   unsigned int branchPC;
 
@@ -63,8 +75,8 @@ struct MEMWB_Reg {
   unsigned int shamtl;
   unsigned int funct;
   unsigned int jumpaddress;
-  int readData;
-  int aluResult;
+  uint32_t readData;
+  uint32_t aluResult;
 
   unsigned int writeReg;
 

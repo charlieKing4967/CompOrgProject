@@ -2,17 +2,60 @@
 
 
 void instruction_fetch(IFID_Reg *IFID){
-  IFID->instruction = memory[pc];
+  uint32_t instruction = programMemory[pc];
   pc++;
   IFID->PCplus1 = pc;
 
+  IFID->Opcode = (instruction >> 26) & 0x3F;
+  if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
+    IFID->jumpaddress = instruction & 0x3FFFFFF;
+  }
+  else{
+    IFID->Rs = (instruction >> 21) & 0x1F;
+    IFID->Rt = (instruction >> 16) & 0x1F;
+    if(IFID->Opcode == 0){
+      IFID->immediate = 0;
+      IFID->jumpaddress = 0;
+      IFID->Rd = (instruction >> 11) & 0x1F;
+      IFID->shamtl = (instruction >> 6) & 0x1F;
+      IFID->funct = instruction & 0x3F;
+    }
+    else{
+      IFID->Rd = 0;
+      IFID->shamtl = 0;
+      IFID->funct = 0;
+      IFID->immediate = instruction & 0x0000FFFF;
+    }
+  }
 }
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
+
+  if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
+    // Stall the pipeline
+    IDEX->RegDst = 0;
+    IDEX->Branch = 0;
+    IDEX->MemRead = 0;
+    IDEX->MemWrite = 0;
+    IDEX->RegWrite = 0;
+    IDEX->MemtoReg = 0;
+    IDEX->Opcode = 0;
+    IDEX->Rs = 0;
+    IDEX->Rt = 0;
+    IDEX->Rd = 0;
+    IDEX->shamtl = 0;
+    IDEX->funct = 0;
+    IDEX->jumpaddress = 0;
+    IDEX->immediate = 0;
+    stall = 1;
+    return;
+  }
+  else stall = 0;
+
   // Bit mast elements out of instruction
-  IDEX->Opcode = (IFID->instruction >> 26) & 0x3F;
+  IDEX->Opcode = IFID->Opcode;
   if((IDEX->Opcode == 2) || (IDEX->Opcode == 3)){
-    IDEX->jumpaddress = IFID->instruction & 0x3FFFFFF;
+    IDEX->jumpaddress = IFID->jumpaddress;
     IDEX->RegDst = 0;
     IDEX->Branch = 0;
     IDEX->MemRead = 0;
@@ -21,8 +64,8 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     IDEX->MemtoReg = 0;
   }
   else{
-    IDEX->Rs = (IFID->instruction >> 21) & 0x1F;
-    IDEX->Rt = (IFID->instruction >> 16) & 0x1F;
+    IDEX->Rs = IFID->Rs;
+    IDEX->Rt = IFID->Rt;
     // R-type instructions
     if(IDEX->Opcode == 0){
       IDEX->RegDst = 1;
@@ -31,12 +74,16 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
       IDEX->MemWrite = 0;
       IDEX->RegWrite = 1;
       IDEX->MemtoReg = 0;
-      IDEX->Rd = (IFID->instruction >> 11) & 0x1F;
-      IDEX->shamtl = (IFID->instruction >> 6) & 0x1F;
-      IDEX->funct = IFID->instruction & 0x3F;
+      IDEX->immediate = 0;
+      IDEX->jumpaddress = 0;
+      IDEX->Rd = IFID->Rd;
+      IDEX->shamtl = IFID->shamtl;
+      IDEX->funct = IFID->funct;
     }
     else{
-      IDEX->immediate = IFID->instruction & 0xFFFF;
+      IDEX->Rd = 0;
+      IDEX->jumpaddress = 0;
+      IDEX->immediate = IFID->immediate;
       // Branch instructions
       if((IDEX->Opcode >= 4) && (IDEX->Opcode <= 7)){
         IDEX->RegDst = 0;
@@ -91,8 +138,57 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 
 }
 
-void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
+void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 
+  // Forwarding
+  // EX Hazards
+  // R-type to R-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
+    //ForwardA = 10
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
+    //ForwardB = 10
+    IDEX->readRt = EXMEM->aluResult;
+  }
+  // I-Type to I-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
+    //ForwardA = 10
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  // I-Type to R-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rs)){
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rt)){
+    IDEX->readRt = EXMEM->aluResult;
+  }
+  // R-Type to I-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd == 0) && (EXMEM->Rd == IDEX->Rs)){
+    IDEX->readRs = EXMEM->aluResult;
+  }
+
+
+  // MEM Hazards
+  // R-Type to R-Type
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (IDEX->Rd != 0) && ~((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd != IDEX->Rs)) && (MEMWB->Rd == IDEX->Rs)){
+    if(MEMWB->MemtoReg){
+      IDEX->readRs = MEMWB->readData;
+      }
+    else{
+      IDEX->readRs = MEMWB->aluResult;
+    }
+  }
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (IDEX->Rd != 0) && ~((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd != IDEX->Rt)) && (MEMWB->Rd == IDEX->Rt)){
+    if(MEMWB->MemtoReg){
+      IDEX->readRt = MEMWB->readData;
+    }
+    else{
+      IDEX->readRt = MEMWB->aluResult;
+    }
+  }
+
+  // Calculating branch address
   EXMEM->branchPC = IDEX->PCplus1+IDEX->immediate;
 
   // R-type instructions
@@ -101,7 +197,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
       // add
       case 32: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
       break;
-      // addu (not sure what's different)
+      // addu
       case 33: EXMEM->aluResult = IDEX->readRs + IDEX->readRt;
       break;
       // and
@@ -132,7 +228,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
       // sub
       case 34: EXMEM->aluResult = IDEX->readRs - IDEX->readRt;
       break;
-      // subu (not sure what to change here)
+      // subu
       case 35: EXMEM->aluResult = IDEX->readRs - IDEX->readRt;
       break;
       // xor
@@ -154,7 +250,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     // addi
     case 8: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
-    // addiu (not sure what to change)
+    // addiu
     case 9: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // andi
@@ -221,6 +317,9 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   EXMEM->MemWrite = IDEX->MemWrite;
   EXMEM->RegWrite = IDEX->RegWrite;
   EXMEM->MemtoReg = IDEX->MemtoReg;
+  EXMEM->Rd = IDEX->Rd;
+  EXMEM->Rs = IDEX->Rs;
+  EXMEM->Rt = IDEX->Rt;
 
   // Pass through PC
   EXMEM->PCplus1 = IDEX->PCplus1;
