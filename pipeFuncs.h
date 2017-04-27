@@ -161,16 +161,20 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     // xori
     case 14: EXMEM->aluResult = IDEX->readRs != IDEX->immediate;
     break;
-    // beg
+    // beq
     case 4:
       if(IDEX->readRs == IDEX->readRt){
-        EXMEM->PCplus1 = EXMEM->PCplus1 + 1 + IDEX->immediate;
+        EXMEM->aluResult = 1;
       }
+      else EXMEM->aluResult = 0;
       break;
     // bne
     case 5:
     if(IDEX->readRs != IDEX->readRt){
-      EXMEM->PCplus1 = EXMEM->PCplus1 + 1 + IDEX->immediate;
+      EXMEM->aluResult = 1;
+    }
+    else{
+      EXMEM->aluResult = 0;
     }
     break;
     // bgtz (wtf is this shit)
@@ -216,6 +220,9 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   EXMEM->RegWrite = IDEX->RegWrite;
   EXMEM->MemtoReg = IDEX->MemtoReg;
 
+  // Pass through PC
+  EXMEM->PCplus1 = IDEX->PCplus1;
+
 }
 
 void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
@@ -227,8 +234,10 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   if(EXMEM->MemWrite){
     memory[EXMEM->aluResult] = EXMEM->readRt;
   }
-  if(EXMEM->Branch){
 
+  pc = EXMEM->PCplus1;
+  if(EXMEM->Branch && EXMEM->aluResult){
+    pc = pc+EXMEM->branchPC;
   }
   MEMWB->writeReg = EXMEM->writeReg;
   MEMWB->MemtoReg = EXMEM->MemtoReg;

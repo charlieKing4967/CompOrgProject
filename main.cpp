@@ -9,16 +9,16 @@ IFID_Reg IFID;
 
 int main(){
   pc = 0;
-  memory[0] = 0x8D490003;
-  memory[8] = 15;
-  //registers[9] = 15;
-  registers[10] = 5;
+  memory[0] = 0x152A0002;
+  //memory[8] = 15;
+  registers[9] = 15;
+  registers[10] = 15;
   instruction_fetch(pc,&IFID);
   instruction_decode(&IFID,&IDEX);
   execute(&IDEX,&EXMEM);
   memory_access(&EXMEM,&MEMWB);
   write_back(&MEMWB);
-  cout << registers[9];
+  cout << pc;
 
   return 0;
 }
