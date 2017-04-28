@@ -214,11 +214,12 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       break;
       // movn?
       // movz?
-      // slt
-      case 42: EXMEM->aluResult = (IDEX->readRs < IDEX->readRt) ? 1 : 0;
+      // slt (convert from unsigned to signed 32 bit ints)
+      case 42: EXMEM->aluResult = ((int32_t)IDEX->readRs < (int32_t)IDEX->readRt) ? 1 : 0;
       break;
-      // sltu (nned to sign-extend)
-      //case 43: EXMEN->aluResult =
+      // sltu
+      case 43: EXMEM->aluResult = (IDEX->readRs < IDEX->readRt) ? 1 : 0;
+      break;
       // sll
       case 0: EXMEM->aluResult = IDEX->readRt << IDEX->shamtl;
       break;
