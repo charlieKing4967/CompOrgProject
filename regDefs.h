@@ -1,6 +1,7 @@
 unsigned int pc;
 bool stall;
 int stallCount;
+int test;
 
 // Need to make byte addressable
 //uint8_t memory[40000];

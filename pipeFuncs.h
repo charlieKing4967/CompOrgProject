@@ -142,25 +142,6 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 
   // Forwarding
-  // EX Hazards
-  // R-type
-  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
-    //ForwardA = 10
-    IDEX->readRs = EXMEM->aluResult;
-  }
-  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
-    //ForwardB = 10
-    IDEX->readRt = EXMEM->aluResult;
-  }
-  // I-Type
-  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
-    IDEX->readRs = EXMEM->aluResult;
-  }
-  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rt)){
-    IDEX->readRt = EXMEM->aluResult;
-  }
-
-
   // MEM Hazards
   // R-Type
   if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
@@ -172,11 +153,13 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     }
   }
   if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rt)){
-    if(MEMWB->MemtoReg){
-      IDEX->readRt = MEMWB->readData;
-    }
-    else{
-      IDEX->readRt = MEMWB->aluResult;
+    if(!((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rs))){
+      if(MEMWB->MemtoReg){
+        IDEX->readRt = MEMWB->readData;
+      }
+      else{
+        IDEX->readRt = MEMWB->aluResult;
+      }
     }
   }
   // I-Type
@@ -195,6 +178,23 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     else{
       IDEX->readRt = MEMWB->aluResult;
     }
+  }
+  // EX Hazards
+  // R-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
+    //ForwardA = 10
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
+    //ForwardB = 10
+    IDEX->readRt = EXMEM->aluResult;
+  }
+  // I-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rt)){
+    IDEX->readRt = EXMEM->aluResult;
   }
 
 
