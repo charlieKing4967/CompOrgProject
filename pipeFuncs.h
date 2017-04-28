@@ -3,7 +3,7 @@
 
 void instruction_fetch(IFID_Reg *IFID){
   uint32_t instruction = programMemory[pc];
-  pc++;
+  //pc++;
   IFID->PCplus1 = pc;
 
   IFID->Opcode = (instruction >> 26) & 0x3F;
@@ -33,6 +33,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline
+    stallCount++;
     IDEX->RegDst = 0;
     IDEX->Branch = 0;
     IDEX->MemRead = 0;
