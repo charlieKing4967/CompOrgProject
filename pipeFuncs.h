@@ -25,7 +25,6 @@ void instruction_fetch(IFID_Reg *IFID){
       IFID->shamtl = 0;
       IFID->funct = 0;
       IFID->immediate = instruction & 0x0000FFFF;
-      if (IFID->immediate & 0x8000) IFID->immediate |= 0xFFFF0000;
     }
   }
 }
@@ -130,7 +129,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 
   // Sign extend immediate value
   if(IDEX->immediate >> 15){
-    IDEX->immediate = IDEX->immediate + 0xFFFF0000;
+    IFID->immediate |= 0xFFFF0000;
   }
 
   // Pass through PC
