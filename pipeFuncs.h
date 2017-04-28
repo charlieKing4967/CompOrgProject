@@ -251,7 +251,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       case 35: EXMEM->aluResult = IDEX->readRs - IDEX->readRt;
       break;
       // xor
-      case 38: EXMEM->aluResult = IDEX->readRs != IDEX->readRt;
+      case 38: EXMEM->aluResult = IDEX->readRs ^ IDEX->readRt;
       break;
 
     }
