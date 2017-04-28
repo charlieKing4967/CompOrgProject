@@ -12,8 +12,8 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
   pc = 0;
-  programMemory[0] = 0x212A0000;
-  programMemory[1] = 0x214B0000;
+  programMemory[0] = 0x01205020;
+  programMemory[2] = 0x01405820;
   //programMemory[2] = 0x01896020;
   //memory[8] = 15;
   registers[9] = 15;
@@ -33,7 +33,7 @@ int main(){
       IFID = IFIDShadow;
       pc++;
     }
-    cout << pc << "   " << MEMWB.Rd << "    " << registers[11] << "\n";
+    cout << pc << "   " << MEMWB.Rt << "    " << registers[11] << "\n";
     //cout << pc << "   " << EXMEM.Rd << IDEX.Rd << "   " << EXMEM.aluResult << "\n";
     //cout << IDEX.Rd;
   }

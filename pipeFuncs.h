@@ -53,7 +53,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
   }
   else stall = 0;
 
-  // Bit mast elements out of instruction
+  // Bit mask elements out of instruction
   IDEX->Opcode = IFID->Opcode;
   if((IDEX->Opcode == 2) || (IDEX->Opcode == 3)){
     IDEX->jumpaddress = IFID->jumpaddress;
@@ -140,38 +140,29 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 }
 
 void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
-  
+
   // Forwarding
   // EX Hazards
-  // R-type to R-type
-  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
+  // R-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
     //ForwardA = 10
     IDEX->readRs = EXMEM->aluResult;
   }
-  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
     //ForwardB = 10
     IDEX->readRt = EXMEM->aluResult;
   }
-  // I-Type to I-type
-  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
-    //ForwardA = 10
+  // I-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
     IDEX->readRs = EXMEM->aluResult;
   }
-  // I-Type to R-Type
-  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rs)){
-    IDEX->readRs = EXMEM->aluResult;
-  }
-  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rt)){
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rt)){
     IDEX->readRt = EXMEM->aluResult;
-  }
-  // R-Type to I-Type
-  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd == 0) && (EXMEM->Rd == IDEX->Rs)){
-    IDEX->readRs = EXMEM->aluResult;
   }
 
 
   // MEM Hazards
-  // R-Type to R-Type
+  // R-Type
   if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
     if(MEMWB->MemtoReg){
       IDEX->readRs = MEMWB->readData;
@@ -188,8 +179,8 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       IDEX->readRt = MEMWB->aluResult;
     }
   }
-  // I-Type to I-Type
-  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
+  // I-Type
+  if((MEMWB->RegWrite) && (MEMWB->Rd == 0) && (MEMWB->Rt == IDEX->Rs)){
     if(MEMWB->MemtoReg){
       IDEX->readRs = MEMWB->readData;
     }
@@ -197,7 +188,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       IDEX->readRs = MEMWB->aluResult;
     }
   }
-  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rt)){
+  if((MEMWB->RegWrite) && (MEMWB->Rd == 0) && (MEMWB->Rt == IDEX->Rt)){
     if(MEMWB->MemtoReg){
       IDEX->readRt = MEMWB->readData;
     }
@@ -205,6 +196,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       IDEX->readRt = MEMWB->aluResult;
     }
   }
+
 
   // Calculating branch address
   EXMEM->branchPC = IDEX->PCplus1+IDEX->immediate;
@@ -364,6 +356,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   MEMWB->aluResult = EXMEM->aluResult;
   MEMWB->RegWrite = EXMEM->RegWrite;
   MEMWB->Rd = EXMEM->Rd;
+  MEMWB->Rt = EXMEM->Rt;
 }
 
 void write_back(MEMWB_Reg *MEMWB){
