@@ -104,7 +104,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
         IDEX->MemtoReg = 1;
       }
       // Store instructions
-      if((IDEX->Opcode >= 40) && (IDEX->Opcode <= 46)){
+      if((IDEX->Opcode >= 40) && (IDEX->Opcode <= 43)){
         IDEX->RegDst = 0;
         IDEX->Branch = 0;
         IDEX->MemRead = 0;
