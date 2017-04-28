@@ -3,9 +3,8 @@ bool stall;
 int stallCount;
 int test;
 
-// Need to make byte addressable
-//uint8_t memory[40000];
-int memory[10000];
+// MEMORY LOCATIONS
+uint32_t memory[1200];
 uint32_t programMemory[10000];
 uint32_t registers[32];
 

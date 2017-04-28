@@ -142,6 +142,34 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 
   // Forwarding
+  // EX Hazards
+  // R-type to R-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rs)){
+    //ForwardA = 10
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd != 0) && (EXMEM->Rd == IDEX->Rt)){
+    //ForwardB = 10
+    IDEX->readRt = EXMEM->aluResult;
+  }
+  // I-Type to I-type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd == 0) && (EXMEM->Rt == IDEX->Rs)){
+    //ForwardA = 10
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  // I-Type to R-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rs)){
+    IDEX->readRs = EXMEM->aluResult;
+  }
+  if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (IDEX->Rd != 0) && (EXMEM->Rt == IDEX->Rt)){
+    IDEX->readRt = EXMEM->aluResult;
+  }
+  // R-Type to I-Type
+  if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (IDEX->Rd == 0) && (EXMEM->Rd == IDEX->Rs)){
+    IDEX->readRs = EXMEM->aluResult;
+  }
+
+  // Forwarding
   // MEM Hazards
   // R-Type
   if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
@@ -222,8 +250,16 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       // or
       case 37: EXMEM->aluResult = IDEX->readRs | IDEX->readRt;
       break;
-      // movn?
-      // movz?
+      // movn
+      case 11:
+        IDEX->RegWrite = (IDEX->readRt != 0) ? 1 : 0;
+        EXMEM->aluResult = IDEX->readRs;
+      break;
+      // movz
+      case 10:
+        IDEX->RegWrite = (IDEX->readRt == 0) ? 1 : 0;
+        EXMEM->aluResult = IDEX->readRs;
+      break;
       // slt (convert from unsigned to signed 32 bit ints)
       case 42: EXMEM->aluResult = ((int32_t)IDEX->readRs < (int32_t)IDEX->readRt) ? 1 : 0;
       break;
@@ -268,51 +304,53 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     case 12: EXMEM->aluResult = IDEX->readRs & IDEX->immediate;
     break;
     // xori
-    case 14: EXMEM->aluResult = IDEX->readRs != IDEX->immediate;
+    case 14: EXMEM->aluResult = IDEX->readRs ^ IDEX->immediate;
     break;
     // beq
-    case 4:
-      if(IDEX->readRs == IDEX->readRt){
-        EXMEM->aluResult = 1;
-      }
-      else EXMEM->aluResult = 0;
-      break;
+    case 4: EXMEM->aluResult = (IDEX->readRs == IDEX->readRt) ? 1 : 0;
+    break;
     // bne
-    case 5:
-    if(IDEX->readRs != IDEX->readRt){
-      EXMEM->aluResult = 1;
-    }
-    else{
-      EXMEM->aluResult = 0;
-    }
+    case 5: EXMEM->aluResult = (IDEX->readRs != IDEX->readRt) ? 1 : 0;
     break;
     // bgtz (wtf is this shit)
     // bltz (again wtf)
     // blez (okay for real wtf)
     // lb (not sure what to do for bytes)
-    case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    case 32: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
     break;
     // lbu
+    case 36: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
+    break;
     // lhu
+    case 37: EXMEM->aluResult = (IDEX->readRs << 2) + (IDEX->immediate << 1);
+    break;
     // lui
+    case 15: EXMEM->aluResult = IDEX->immediate << 16;
+    break;
     // lw
-    case 35: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    case 35: EXMEM->aluResult = (IDEX->readRs + IDEX->immediate) << 2;
     break;
     // ori
     case 13: EXMEM->aluResult = IDEX->readRs | IDEX->immediate;
     break;
-    // slti
-    case 10: EXMEM->aluResult = (IDEX->readRs < IDEX->immediate) ? 1:0;
+    // slti (convert from unsigned to signed 32 bit ints)
+    case 10: EXMEM->aluResult = ((int32_t)IDEX->readRs < (int32_t)IDEX->immediate) ? 1:0;
     break;
-    // sltiu (not sure what to change here)
+    // sltiu
     case 11: EXMEM->aluResult = (IDEX->readRs < IDEX->immediate) ? 1:0;
     break;
     // sb
-    // sh
-    // sw
-    case 43: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    case 40: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
     break;
-    // seb
+    // sh
+    case 41: EXMEM->aluResult = (IDEX->readRs << 2) + (IDEX->immediate << 1);
+    break;
+    // sw
+    case 43: EXMEM->aluResult = (IDEX->readRs + IDEX->immediate) << 2;
+    break;
+    // seb (This is a bit weird cuz the system is BIG ENDIAN, also NOT an I type instruction)
+    case 31: EXMEM->aluResult = (IDEX->readRs >> 31) ? (IDEX->readRs >> 24) | 0xffffff00 : (IDEX->readRs >> 24);
+    break;
   }
 
   EXMEM->readRt = IDEX->readRt;
@@ -340,11 +378,13 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   // Read from memory
   if(EXMEM->MemRead){
-    MEMWB->readData = memory[EXMEM->aluResult];
+    // TODO
+    MEMWB->readData = memory[EXMEM->aluResult>>2];
   }
   // Write to memory
   if(EXMEM->MemWrite){
-    memory[EXMEM->aluResult] = EXMEM->readRt;
+    // TODO
+    memory[EXMEM->aluResult>>2] = EXMEM->readRt;
   }
 
   if(EXMEM->Branch && EXMEM->aluResult){
