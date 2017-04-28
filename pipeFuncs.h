@@ -140,7 +140,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
 }
 
 void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
-
+  
   // Forwarding
   // EX Hazards
   // R-type to R-type
@@ -172,15 +172,32 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 
   // MEM Hazards
   // R-Type to R-Type
-  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (IDEX->Rd != 0) && ~((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd != IDEX->Rs)) && (MEMWB->Rd == IDEX->Rs)){
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
     if(MEMWB->MemtoReg){
       IDEX->readRs = MEMWB->readData;
-      }
+    }
     else{
       IDEX->readRs = MEMWB->aluResult;
     }
   }
-  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (IDEX->Rd != 0) && ~((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd != IDEX->Rt)) && (MEMWB->Rd == IDEX->Rt)){
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rt)){
+    if(MEMWB->MemtoReg){
+      IDEX->readRt = MEMWB->readData;
+    }
+    else{
+      IDEX->readRt = MEMWB->aluResult;
+    }
+  }
+  // I-Type to I-Type
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rs)){
+    if(MEMWB->MemtoReg){
+      IDEX->readRs = MEMWB->readData;
+    }
+    else{
+      IDEX->readRs = MEMWB->aluResult;
+    }
+  }
+  if((MEMWB->RegWrite) && (MEMWB->Rd != 0) && (MEMWB->Rd == IDEX->Rt)){
     if(MEMWB->MemtoReg){
       IDEX->readRt = MEMWB->readData;
     }
@@ -346,6 +363,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   MEMWB->MemtoReg = EXMEM->MemtoReg;
   MEMWB->aluResult = EXMEM->aluResult;
   MEMWB->RegWrite = EXMEM->RegWrite;
+  MEMWB->Rd = EXMEM->Rd;
 }
 
 void write_back(MEMWB_Reg *MEMWB){
