@@ -194,19 +194,19 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
       if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
       break;
     */
+  }
 
-    // If branching, flush IFID register
-    if(IFflush){
-      IFID->PCplus1 = 0;
-      IFID->Opcode = 0;
-      IFID->Rs = 0;
-      IFID->Rt = 0;
-      IFID->Rd = 0;
-      IFID->shamtl = 0;
-      IFID->funct = 0;
-      IFID->jumpaddress = 0;
-      IFID->immediate = 0;
-    }
+  // If branching, flush IFID register
+  if(IFflush){
+    IFID->PCplus1 = 0;
+    IFID->Opcode = 0;
+    IFID->Rs = 0;
+    IFID->Rt = 0;
+    IFID->Rd = 0;
+    IFID->shamtl = 0;
+    IFID->funct = 0;
+    IFID->jumpaddress = 0;
+    IFID->immediate = 0;
   }
 
 

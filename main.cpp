@@ -14,10 +14,10 @@ int main(){
   pc = 0;
   programMemory[0] = 0x21290001;
   programMemory[1] = 0x21290001;
-  programMemory[4] = 0x152A000A;
+  programMemory[4] = 0x112A000A;
   programMemory[5] = 0x216B0007;
   //programMemory[15] = 0x200B0007;
-  registers[9] = 4;
+  registers[9] = 5;
   registers[10] = 7;
   //registers[11] = 4;
   //registers[12] = 3;
@@ -30,13 +30,13 @@ int main(){
     instruction_decode(&IFID,&IDEXShadow);
     execute(&IDEX,&EXMEMShadow,&MEMWB);
     memory_access(&EXMEM,&MEMWBShadow);
-    cout << IFID.Opcode << "\n";
+    cout << registers[11] << "\n";
 
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;
     if(!stall){
-      IFID = IFIDShadow;
+      if(!IFflush) IFID = IFIDShadow;
       pc++;
     }
     //cout << pc << "   " << EXMEM.Rd << IDEX.Rd << "   " << EXMEM.aluResult << "\n";
