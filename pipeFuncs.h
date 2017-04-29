@@ -154,6 +154,62 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     IFID->immediate |= 0xFFFF0000;
   }
 
+  // Calculating branch address
+  IDEX->branchPC = IFID->PCplus1+IFID->immediate;
+
+  // Branch detection
+  IFflush = 0;
+  switch (IFID->Opcode){
+    // beq
+    case 4:
+      if(IDEX->readRs == IDEX->readRt){
+         pc = IDEX->branchPC;
+         IFflush = 1;
+      }
+      break;
+    // bne
+    case 5:
+      if(IDEX->readRs != IDEX->readRt){
+        pc = IDEX->branchPC;
+        IFflush = 1;
+      }
+      break;
+    // blez
+    case 6:
+      if(IDEX->readRs <= 0){
+        pc = IDEX->branchPC;
+        IFflush = 1;
+      }
+      break;
+    // bgtz
+    case 7:
+      if(IDEX->readRs > 0){
+        pc = IDEX->branchPC;
+        IFflush = 1;
+      }
+      break;
+    /*
+    // bltz
+    case 1:
+      if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
+      break;
+    */
+
+    // If branching, flush IFID register
+    if(IFflush){
+      IFID->PCplus1 = 0;
+      IFID->Opcode = 0;
+      IFID->Rs = 0;
+      IFID->Rt = 0;
+      IFID->Rd = 0;
+      IFID->shamtl = 0;
+      IFID->funct = 0;
+      IFID->jumpaddress = 0;
+      IFID->immediate = 0;
+    }
+  }
+
+
   // Pass through PC
   IDEX->PCplus1 = IFID->PCplus1;
 
@@ -217,9 +273,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rt)){
     IDEX->readRt = EXMEM->aluResult;
   }
-
-  // Calculating branch address
-  EXMEM->branchPC = IDEX->PCplus1+IDEX->immediate;
 
   // R-type instructions
   if(IDEX->Opcode == 0){
@@ -298,15 +351,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     // xori
     case 14: EXMEM->aluResult = IDEX->readRs ^ IDEX->immediate;
     break;
-    // beq
-    case 4: EXMEM->aluResult = (IDEX->readRs == IDEX->readRt) ? 1 : 0;
-    break;
-    // bne
-    case 5: EXMEM->aluResult = (IDEX->readRs != IDEX->readRt) ? 1 : 0;
-    break;
-    // bgtz (wtf is this shit)
-    // bltz (again wtf)
-    // blez (okay for real wtf)
     // lb
     case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
@@ -403,10 +447,6 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     }
     // Write Words
     else memory[EXMEM->aluResult>>2] = EXMEM->readRt;
-  }
-
-  if(EXMEM->Branch && EXMEM->aluResult){
-    pc = EXMEM->branchPC;
   }
 
   MEMWB->writeReg = EXMEM->writeReg;
