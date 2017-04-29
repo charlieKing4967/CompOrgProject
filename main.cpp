@@ -12,16 +12,9 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
   pc = 0;
-  programMemory[0] = 0x8D2A0000;
-  programMemory[1] = 0x214A0001;
-  programMemory[2] = 0x214A0001;
-  memory[8] = 15;
-  registers[9] = 8;
-  //registers[10] = 7;
-  //registers[11] = 4;
-  //registers[12] = 3;
-  memory[15] = 10;
-  //registers[11]
+  registers[8] = 0x3a000000;
+  programMemory[0] = 0x7C084C00;
+
   for(int clock = 0; clock < 25; clock++){
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
@@ -31,7 +24,6 @@ int main(){
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;
-    cout << pc << "    " << registers[10] << "\n";
     if(!stall){
       IFID = IFIDShadow;
       pc++;
@@ -39,5 +31,8 @@ int main(){
     //cout << pc << "   " << EXMEM.Rd << IDEX.Rd << "   " << EXMEM.aluResult << "\n";
     //cout << IDEX.Rd;
   }
+
+  cout << registers[9] << "\n";
+
   return 0;
 }

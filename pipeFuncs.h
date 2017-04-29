@@ -13,13 +13,15 @@ void instruction_fetch(IFID_Reg *IFID){
   else{
     IFID->Rs = (instruction >> 21) & 0x1F;
     IFID->Rt = (instruction >> 16) & 0x1F;
-    if(IFID->Opcode == 0){
+    // R-type or seb-type
+    if(IFID->Opcode == 0 || IFID->Opcode == 31){
       IFID->immediate = 0;
       IFID->jumpaddress = 0;
       IFID->Rd = (instruction >> 11) & 0x1F;
       IFID->shamtl = (instruction >> 6) & 0x1F;
       IFID->funct = instruction & 0x3F;
     }
+    // I-type
     else{
       IFID->Rd = 0;
       IFID->shamtl = 0;
@@ -73,8 +75,8 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
   else{
     IDEX->Rs = IFID->Rs;
     IDEX->Rt = IFID->Rt;
-    // R-type instructions
-    if(IDEX->Opcode == 0){
+    // R-type or seb-type instructions
+    if(IDEX->Opcode == 0 || IDEX->Opcode == 31){
       IDEX->RegDst = 1;
       IDEX->Branch = 0;
       IDEX->MemRead = 0;
@@ -94,8 +96,8 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
       IDEX->Rd = 0;
       IDEX->jumpaddress = 0;
       IDEX->immediate = IFID->immediate;
-      // Branch instructions
-      if((IDEX->Opcode >= 4) && (IDEX->Opcode <= 7)){
+      // Branch instructions (including the special bltz)
+      if(((IDEX->Opcode >= 4) && (IDEX->Opcode <= 7)) || (IDEX->Opcode == 1 && IDEX->readRt == 0)){
         IDEX->RegDst = 0;
         IDEX->Branch = 1;
         IDEX->MemRead = 0;
@@ -304,9 +306,12 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     // bne
     case 5: EXMEM->aluResult = (IDEX->readRs != IDEX->readRt) ? 1 : 0;
     break;
-    // bgtz (wtf is this shit)
-    // bltz (again wtf)
-    // blez (okay for real wtf)
+    // bgtz (break greater than zero)
+    case 7: EXMEM->aluResult = ((int32_t)IDEX->readRs > 0) ? 1 : 0;
+    break;
+    // blez (break less than equal to zero)
+    case 6: EXMEM->aluResult = ((int32_t)IDEX->readRs <= 0) ? 1 : 0;
+    break;
     // lb
     case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
@@ -343,9 +348,17 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     // sw
     case 43: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
-    // seb (This is a bit weird cuz the system is BIG ENDIAN, also NOT an I type instruction)
-    case 31: EXMEM->aluResult = (IDEX->readRs >> 31) ? (IDEX->readRs >> 24) | 0xffffff00 : (IDEX->readRs >> 24);
+
+    // Sub-opcode Section (for non standard instruction)
+    case 1: // REGIMM (I-type branch like)
+      // bltz
+      if(IDEX->readRt == 0) EXMEM->aluResult = ((int32_t)IDEX->readRs < 0) ? 1 : 0;
     break;
+    case 31: // SPECIAL3 (R-type like)
+      // seb
+      if(IDEX->shamtl == 16) EXMEM->aluResult = (IDEX->readRt >> 31) ? (IDEX->readRt >> 24) | 0xffffff00 : (IDEX->readRt >> 24);
+    break;
+
   }
 
   EXMEM->readRt = IDEX->readRt;
