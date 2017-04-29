@@ -40,6 +40,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     IDEX->MemWrite = 0;
     IDEX->RegWrite = 0;
     IDEX->MemtoReg = 0;
+    IDEX->ByteData = 0;
+    IDEX->HalfData = 0;
+    IDEX->SignedData = 0;
     IDEX->Opcode = 0;
     IDEX->Rs = 0;
     IDEX->Rt = 0;
@@ -63,6 +66,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     IDEX->MemWrite = 0;
     IDEX->RegWrite = 0;
     IDEX->MemtoReg = 0;
+    IDEX->ByteData = 0;
+    IDEX->HalfData = 0;
+    IDEX->SignedData = 0;
   }
   else{
     IDEX->Rs = IFID->Rs;
@@ -75,6 +81,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
       IDEX->MemWrite = 0;
       IDEX->RegWrite = 1;
       IDEX->MemtoReg = 0;
+      IDEX->ByteData = 0;
+      IDEX->HalfData = 0;
+      IDEX->SignedData = 0;
       IDEX->immediate = 0;
       IDEX->jumpaddress = 0;
       IDEX->Rd = IFID->Rd;
@@ -93,6 +102,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
         IDEX->MemWrite = 0;
         IDEX->RegWrite = 0;
         IDEX->MemtoReg = 0;
+        IDEX->ByteData = 0;
+        IDEX->HalfData = 0;
+        IDEX->SignedData = 0;
       }
       // Load instructions
       if((IDEX->Opcode >= 32) && (IDEX->Opcode <= 38)){
@@ -102,6 +114,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
         IDEX->MemWrite = 0;
         IDEX->RegWrite = 1;
         IDEX->MemtoReg = 1;
+        IDEX->ByteData = (IDEX->Opcode == 32 || IDEX->Opcode == 36) ? 1 : 0;
+        IDEX->HalfData = (IDEX->Opcode == 33 || IDEX->Opcode == 37) ? 1 : 0;
+        IDEX->SignedData = (IDEX->Opcode == 32 || IDEX->Opcode == 33) ? 1 : 0;
       }
       // Store instructions
       if((IDEX->Opcode >= 40) && (IDEX->Opcode <= 43)){
@@ -111,6 +126,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
         IDEX->MemWrite = 1;
         IDEX->RegWrite = 0;
         IDEX->MemtoReg = 0;
+        IDEX->ByteData = (IDEX->Opcode == 40) ? 1 : 0;
+        IDEX->HalfData = (IDEX->Opcode == 41) ? 1 : 0;
+        IDEX->SignedData = 0;
       }
       // Immediate Arithmetic instructions
       if((IDEX->Opcode >= 8) && (IDEX->Opcode <= 15)){
@@ -120,6 +138,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
         IDEX->MemWrite = 0;
         IDEX->RegWrite = 1;
         IDEX->MemtoReg = 0;
+        IDEX->ByteData = 0;
+        IDEX->HalfData = 0;
+        IDEX->SignedData = 0;
       }
     }
   }
@@ -196,7 +217,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IDEX->Rt)){
     IDEX->readRt = EXMEM->aluResult;
   }
-
 
   // Calculating branch address
   EXMEM->branchPC = IDEX->PCplus1+IDEX->immediate;
@@ -287,20 +307,23 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     // bgtz (wtf is this shit)
     // bltz (again wtf)
     // blez (okay for real wtf)
-    // lb (not sure what to do for bytes)
-    case 32: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
+    // lb
+    case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
+    break;
+    // lh (added instruction for consistency)
+    case 33: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // lbu
-    case 36: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
+    case 36: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // lhu
-    case 37: EXMEM->aluResult = (IDEX->readRs << 2) + (IDEX->immediate << 1);
+    case 37: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // lui
     case 15: EXMEM->aluResult = IDEX->immediate << 16;
     break;
     // lw
-    case 35: EXMEM->aluResult = (IDEX->readRs + IDEX->immediate) << 2;
+    case 35: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // ori
     case 13: EXMEM->aluResult = IDEX->readRs | IDEX->immediate;
@@ -312,13 +335,13 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     case 11: EXMEM->aluResult = (IDEX->readRs < IDEX->immediate) ? 1:0;
     break;
     // sb
-    case 40: EXMEM->aluResult = (IDEX->readRs << 2) + IDEX->immediate;
+    case 40: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // sh
-    case 41: EXMEM->aluResult = (IDEX->readRs << 2) + (IDEX->immediate << 1);
+    case 41: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // sw
-    case 43: EXMEM->aluResult = (IDEX->readRs + IDEX->immediate) << 2;
+    case 43: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
     // seb (This is a bit weird cuz the system is BIG ENDIAN, also NOT an I type instruction)
     case 31: EXMEM->aluResult = (IDEX->readRs >> 31) ? (IDEX->readRs >> 24) | 0xffffff00 : (IDEX->readRs >> 24);
@@ -338,6 +361,9 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   EXMEM->MemWrite = IDEX->MemWrite;
   EXMEM->RegWrite = IDEX->RegWrite;
   EXMEM->MemtoReg = IDEX->MemtoReg;
+  EXMEM->ByteData = IDEX->ByteData;
+  EXMEM->HalfData = IDEX->HalfData;
+  EXMEM->SignedData = IDEX->SignedData;
   EXMEM->Rd = IDEX->Rd;
   EXMEM->Rs = IDEX->Rs;
   EXMEM->Rt = IDEX->Rt;
@@ -350,13 +376,33 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   // Read from memory
   if(EXMEM->MemRead){
-    // TODO
-    MEMWB->readData = memory[EXMEM->aluResult>>2];
+    // Read bytes
+    if(EXMEM->ByteData){
+        MEMWB->readData = (memory[EXMEM->aluResult>>2] >> ((3 - (EXMEM->aluResult & 3)) << 3)) & 0xFF;
+        if (EXMEM->SignedData && MEMWB->readData >> 7) MEMWB->readData |= 0xFFFFFF00;
+    }
+    // Read Halfwords
+    else if(EXMEM->HalfData){
+        MEMWB->readData = (memory[EXMEM->aluResult>>2] >> ((1 - (EXMEM->aluResult>>1 & 1)) << 4)) & 0xFFFF;
+        if (EXMEM->SignedData && MEMWB->readData >> 15) MEMWB->readData |= 0xFFFF0000;
+    }
+    // Read Words
+    else MEMWB->readData = memory[EXMEM->aluResult>>2];
   }
   // Write to memory
   if(EXMEM->MemWrite){
-    // TODO
-    memory[EXMEM->aluResult>>2] = EXMEM->readRt;
+    // Write Bytes
+    if(EXMEM->ByteData){
+        memory[EXMEM->aluResult>>2] &= ~(0xFF << ((3 - (EXMEM->aluResult & 3)) << 3));
+        memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFF) << ((3 - (EXMEM->aluResult & 3)) << 3);
+    }
+    // Write Halfwords
+    else if(EXMEM->HalfData){
+        memory[EXMEM->aluResult>>2] &= ~(0xFFFF << ((1 - (EXMEM->aluResult>>1 & 1)) << 4));
+        memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFFFF) << ((1 - (EXMEM->aluResult>>1 & 1)) << 4);
+    }
+    // Write Words
+    else memory[EXMEM->aluResult>>2] = EXMEM->readRt;
   }
 
   if(EXMEM->Branch && EXMEM->aluResult){

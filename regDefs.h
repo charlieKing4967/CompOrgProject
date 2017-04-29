@@ -41,6 +41,9 @@ struct IDEX_Reg {
   bool MemWrite;
   bool RegWrite;
   bool MemtoReg;
+  bool ByteData;
+  bool HalfData;
+  bool SignedData;
 
 };
 
@@ -65,6 +68,9 @@ struct EXMEM_Reg {
   bool MemWrite;
   bool RegWrite;
   bool MemtoReg;
+  bool ByteData;
+  bool HalfData;
+  bool SignedData;
 };
 
 struct MEMWB_Reg {
