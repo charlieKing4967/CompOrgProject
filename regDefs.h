@@ -2,7 +2,6 @@ unsigned int pc;
 bool stall;
 bool IFflush;
 int stallCount;
-int test;
 
 // MEMORY LOCATIONS
 uint32_t memory[1200];
@@ -93,5 +92,3 @@ struct MEMWB_Reg {
   bool RegWrite;
   bool MemtoReg;
 };
-
-IFID_Reg Flush;
