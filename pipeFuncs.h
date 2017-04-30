@@ -32,13 +32,12 @@ void instruction_fetch(IFID_Reg *IFID){
 }
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
-
   // Jump detection
   IFflush = 0;
   if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
-    if(IFID->Opcode == 3) registers[31] = pc+2;
+    if(IFID->Opcode == 3) registers[31] = IFID->PCplus1+2;
     pc = IFID->jumpaddress-1;
-    stall = 1;
+    IFflush = 1;
   }
 
   // Stall if dependency after load instruction
@@ -51,7 +50,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
   else stall = 0;
 
-  // Jump detection 
+  // Jump detection
   if(((IFID->Opcode == 0) && (IFID->funct == 8)) || (IFID->Opcode == 6) || (IFID->Opcode == 7)){
     // Stall if adjacent dependency
     // Check for R-Type dependency
@@ -79,10 +78,9 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
       return;
     }
   }
-
   // Branch detection
   // Beq and Bne
-  if((IFID->Opcode == 4) && (IFID->Opcode == 5)){
+  if((IFID->Opcode == 4) || (IFID->Opcode == 5)){
     // Stall if adjacent dependency
     // Check for R-Type dependency
     if((IDEX->RegWrite) && (IDEX->Rd != 0) && ((IDEX->Rd == IFID->Rs) || (IDEX->Rd == IFID->Rt))){
@@ -230,7 +228,6 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   // Calculating branch address
   IDEX->branchPC = IFID->PCplus1+IFID->immediate;
 
-  IFflush = 0;
   switch (IFID->Opcode){
     // beq
     case 4:
@@ -269,7 +266,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
 
   if((IFID->Opcode == 0) && (IFID->funct == 8)){
-    pc = registers[IFID->Rs]-1;
+    pc = IDEX->readRs - 1;
     IFflush = 1;
   }
 
@@ -363,9 +360,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       // and
       case 36: EXMEM->aluResult = IDEX->readRs & IDEX->readRt;
       break;
-      // jr (Not sure about this one)
-      case 8:  EXMEM->PCplus1 = IDEX->readRs;
-      break;
       // nor
       case 39: EXMEM->aluResult = ~(IDEX->readRs | IDEX->readRt);
       break;
@@ -408,14 +402,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   }
   // J and I-type instructions
   switch(IDEX->Opcode){
-    // j (not sure if I should update PC directly)
-    case 2: EXMEM->PCplus1 = IDEX->jumpaddress;
-    break;
-    // jal (not sure if I should update PC directly here too)
-    case 3:
-      registers[31] = IDEX->PCplus1 + 2;
-      EXMEM->PCplus1 = IDEX->jumpaddress;
-      break;
     // addi
     case 8: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
