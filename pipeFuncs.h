@@ -33,6 +33,14 @@ void instruction_fetch(IFID_Reg *IFID){
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
 
+  // Jump detection
+  IFflush = 0;
+  if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
+    if(IFID->Opcode == 3) registers[31] = pc+2;
+    pc = IFID->jumpaddress-1;
+    stall = 1;
+  }
+
   // Stall if dependency after load instruction
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline
@@ -42,6 +50,35 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     return;
   }
   else stall = 0;
+
+  // Jump detection
+  if((IFID->Opcode == 0) && (IFID->funct == 8)){
+    // Stall if adjacent dependency
+    // Check for R-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd != 0) && (IDEX->Rd == IFID->Rs)){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Check for I-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd == 0) && (IDEX->Rt == IFID->Rs)){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Stall again if adjacent load instruction
+    if((EXMEM->MemRead) && (EXMEM->Rt == IFID->Rs)){
+      // Stall the pipeline
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+  }
 
   // Branch detection
   if((IFID->Opcode >= 4) && (IFID->Opcode <= 7)){
@@ -172,7 +209,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
 
   // Branch Forwarding
-  if((IFID->Opcode >= 4) && (IFID->Opcode <= 7)){
+  if(((IFID->Opcode >= 4) && (IFID->Opcode <= 7)) || ((IFID->Opcode == 0) && (IFID->funct == 8))){
     // R-Type
     if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IFID->Rs)){
       IDEX->readRs = EXMEM->aluResult;
@@ -228,6 +265,11 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
       if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
       break;
     */
+  }
+
+  if((IFID->Opcode == 0) && (IFID->funct == 8)){
+    pc = registers[IFID->Rs]-1;
+    IFflush = 1;
   }
 
   // If branching, flush IFID register

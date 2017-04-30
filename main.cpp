@@ -14,15 +14,13 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
   pc = 0;
-  programMemory[0] = 0x21290001;
-  programMemory[1] = 0x21290001;
-  programMemory[2] = 0x21AD0008;
-  programMemory[3] = 0x112A000A;
-  programMemory[14] = 0x216B0008;
+  //programMemory[0] = 0x21290001;
+  programMemory[0] = 0x01200008;
+
   //programMemory[6] = 0x200B0007;
   //programMemory[5] = 0x200B0007;
   //programMemory[15] = 0x200B0007;
-  registers[9] = 5;
+  registers[9] = 6;
   registers[10] = 7;
   //registers[11] = 4;
   //registers[12] = 3;
@@ -35,7 +33,7 @@ int main(){
     instruction_decode(&IFID,&IDEXShadow,&EXMEM);
     execute(&IDEX,&EXMEMShadow,&MEMWB);
     memory_access(&EXMEM,&MEMWBShadow);
-    cout << registers[11] << "\n";
+    cout << IFID.Rt << "\n";
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;
