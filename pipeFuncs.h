@@ -51,8 +51,8 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
   else stall = 0;
 
-  // Jump detection
-  if((IFID->Opcode == 0) && (IFID->funct == 8)){
+  // Jump detection 
+  if(((IFID->Opcode == 0) && (IFID->funct == 8)) || (IFID->Opcode == 6) || (IFID->Opcode == 7)){
     // Stall if adjacent dependency
     // Check for R-Type dependency
     if((IDEX->RegWrite) && (IDEX->Rd != 0) && (IDEX->Rd == IFID->Rs)){
@@ -81,7 +81,8 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
 
   // Branch detection
-  if((IFID->Opcode >= 4) && (IFID->Opcode <= 7)){
+  // Beq and Bne
+  if((IFID->Opcode == 4) && (IFID->Opcode == 5)){
     // Stall if adjacent dependency
     // Check for R-Type dependency
     if((IDEX->RegWrite) && (IDEX->Rd != 0) && ((IDEX->Rd == IFID->Rs) || (IDEX->Rd == IFID->Rt))){
