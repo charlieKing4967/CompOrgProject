@@ -259,14 +259,15 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
         IFflush = 1;
       }
       break;
-    /*
+
     // bltz
     case 1:
       if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
       break;
-    */
+
   }
 
+  // Calculating jump address
   if((IFID->Opcode == 0) && (IFID->funct == 8)){
     pc = IDEX->readRs - 1;
     IFflush = 1;
@@ -415,18 +416,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     break;
     // xori
     case 14: EXMEM->aluResult = IDEX->readRs ^ IDEX->immediate;
-    break;
-    // beq
-    case 4: EXMEM->aluResult = (IDEX->readRs == IDEX->readRt) ? 1 : 0;
-    break;
-    // bne
-    case 5: EXMEM->aluResult = (IDEX->readRs != IDEX->readRt) ? 1 : 0;
-    break;
-    // bgtz (break greater than zero)
-    case 7: EXMEM->aluResult = ((int32_t)IDEX->readRs > 0) ? 1 : 0;
-    break;
-    // blez (break less than equal to zero)
-    case 6: EXMEM->aluResult = ((int32_t)IDEX->readRs <= 0) ? 1 : 0;
     break;
     // lb
     case 32: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
