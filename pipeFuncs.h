@@ -237,33 +237,35 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
          pc = IDEX->branchPC;
          IFflush = 1;
       }
-      break;
+    break;
     // bne
     case 5:
       if(IDEX->readRs != IDEX->readRt){
         pc = IDEX->branchPC;
         IFflush = 1;
       }
-      break;
+    break;
     // blez
     case 6:
-      if(IDEX->readRs <= 0){
+      if((int32_t)IDEX->readRs <= 0){
         pc = IDEX->branchPC;
         IFflush = 1;
       }
-      break;
+    break;
     // bgtz
     case 7:
-      if(IDEX->readRs > 0){
+      if((int32_t)IDEX->readRs > 0){
         pc = IDEX->branchPC;
         IFflush = 1;
       }
-      break;
-
+    break;
     // bltz
     case 1:
-      if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
-      break;
+      if((IDEX->readRt == 0) && ((int32_t)IDEX->readRs < 0)){
+        pc = IDEX->branchPC;
+        IFflush = 1;
+      }
+    break;
 
   }
 
@@ -455,10 +457,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     break;
 
     // Sub-opcode Section (for non standard instruction)
-    case 1: // REGIMM (I-type branch like)
-      // bltz
-      if(IDEX->readRt == 0) EXMEM->aluResult = ((int32_t)IDEX->readRs < 0) ? 1 : 0;
-    break;
     case 31: // SPECIAL3 (R-type like)
       // seb
       if(IDEX->shamtl == 16) EXMEM->aluResult = (IDEX->readRt >> 31) ? (IDEX->readRt >> 24) | 0xffffff00 : (IDEX->readRt >> 24);
