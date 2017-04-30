@@ -1,5 +1,6 @@
 unsigned int pc;
 bool stall;
+bool IFflush;
 int stallCount;
 int test;
 
@@ -34,6 +35,8 @@ struct IDEX_Reg {
   uint32_t readRs;
   uint32_t readRt;
   uint32_t immediate;
+
+  unsigned int branchPC;
 
   bool RegDst;
   bool Branch;
@@ -90,3 +93,5 @@ struct MEMWB_Reg {
   bool RegWrite;
   bool MemtoReg;
 };
+
+IFID_Reg Flush;
