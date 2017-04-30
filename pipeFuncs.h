@@ -516,7 +516,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
         if (EXMEM->SignedData && MEMWB->readData >> 15) MEMWB->readData |= 0xFFFF0000;
     }
     // Read Words
-    else MEMWB->readData = memory[EXMEM->aluResult*4];
+    else MEMWB->readData = memory[EXMEM->aluResult>>2];
   }
   // Write to memory
   if(EXMEM->MemWrite){
