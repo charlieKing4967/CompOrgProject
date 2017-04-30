@@ -1,5 +1,7 @@
 #include "regDefs.h"
 
+IDEX_Reg zeroReg;
+
 
 void instruction_fetch(IFID_Reg *IFID){
   uint32_t instruction = programMemory[pc];
@@ -31,32 +33,83 @@ void instruction_fetch(IFID_Reg *IFID){
   }
 }
 
-void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
+void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
+  // Jump detection
+  IFflush = 0;
+  if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
+    if(IFID->Opcode == 3) registers[31] = IFID->PCplus1+2;
+    pc = IFID->jumpaddress-1;
+    IFflush = 1;
+  }
 
+  // Stall if dependency after load instruction
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline
     stallCount++;
-    IDEX->RegDst = 0;
-    IDEX->Branch = 0;
-    IDEX->MemRead = 0;
-    IDEX->MemWrite = 0;
-    IDEX->RegWrite = 0;
-    IDEX->MemtoReg = 0;
-    IDEX->ByteData = 0;
-    IDEX->HalfData = 0;
-    IDEX->SignedData = 0;
-    IDEX->Opcode = 0;
-    IDEX->Rs = 0;
-    IDEX->Rt = 0;
-    IDEX->Rd = 0;
-    IDEX->shamtl = 0;
-    IDEX->funct = 0;
-    IDEX->jumpaddress = 0;
-    IDEX->immediate = 0;
+    *IDEX = zeroReg;
     stall = 1;
     return;
   }
   else stall = 0;
+
+  // Jump detection
+  if(((IFID->Opcode == 0) && (IFID->funct == 8)) || (IFID->Opcode == 6) || (IFID->Opcode == 7)){
+    // Stall if adjacent dependency
+    // Check for R-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd != 0) && (IDEX->Rd == IFID->Rs)){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Check for I-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd == 0) && (IDEX->Rt == IFID->Rs)){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Stall again if adjacent load instruction
+    if((EXMEM->MemRead) && (EXMEM->Rt == IFID->Rs)){
+      // Stall the pipeline
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+  }
+  // Branch detection
+  // Beq and Bne
+  if((IFID->Opcode == 4) || (IFID->Opcode == 5)){
+    // Stall if adjacent dependency
+    // Check for R-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd != 0) && ((IDEX->Rd == IFID->Rs) || (IDEX->Rd == IFID->Rt))){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Check for I-Type dependency
+    if((IDEX->RegWrite) && (IDEX->Rd == 0) && ((IDEX->Rt == IFID->Rs) || (IDEX->Rt == IFID->Rt))){
+      // Stall
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+    // Stall again if adjacent load instruction
+    if((EXMEM->MemRead) && ((EXMEM->Rt == IFID->Rs) ||  (EXMEM->Rt == IFID->Rt))){
+      // Stall the pipeline
+      stallCount++;
+      *IDEX = zeroReg;
+      stall = 1;
+      return;
+    }
+  }
+
 
   // Bit mask elements out of instruction
   IDEX->Opcode = IFID->Opcode;
@@ -156,11 +209,27 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
     IFID->immediate |= 0xFFFF0000;
   }
 
+  // Branch Forwarding
+  if(((IFID->Opcode >= 4) && (IFID->Opcode <= 7)) || ((IFID->Opcode == 0) && (IFID->funct == 8))){
+    // R-Type
+    if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IFID->Rs)){
+      IDEX->readRs = EXMEM->aluResult;
+    }
+    if((EXMEM->RegWrite) && (EXMEM->Rd != 0) && (EXMEM->Rd == IFID->Rt)){
+      IDEX->readRt = EXMEM->aluResult;
+    }
+    // I-Type
+    if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IFID->Rs)){
+      IDEX->readRs = EXMEM->aluResult;
+    }
+    if((EXMEM->RegWrite) && (EXMEM->Rd == 0) && (EXMEM->Rt == IFID->Rt)){
+      IDEX->readRt = EXMEM->aluResult;
+    }
+  }
+
   // Calculating branch address
   IDEX->branchPC = IFID->PCplus1+IFID->immediate;
 
-  // Branch detection
-  IFflush = 0;
   switch (IFID->Opcode){
     // beq
     case 4:
@@ -196,6 +265,11 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX){
       if((IDEX->readRt == 0) && (IDEX->readRs < 0)) pc = IDEX->branchPC;
       break;
     */
+  }
+
+  if((IFID->Opcode == 0) && (IFID->funct == 8)){
+    pc = IDEX->readRs - 1;
+    IFflush = 1;
   }
 
   // If branching, flush IFID register
@@ -288,9 +362,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
       // and
       case 36: EXMEM->aluResult = IDEX->readRs & IDEX->readRt;
       break;
-      // jr (Not sure about this one)
-      case 8:  EXMEM->PCplus1 = IDEX->readRs;
-      break;
       // nor
       case 39: EXMEM->aluResult = ~(IDEX->readRs | IDEX->readRt);
       break;
@@ -333,14 +404,6 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   }
   // J and I-type instructions
   switch(IDEX->Opcode){
-    // j (not sure if I should update PC directly)
-    case 2: EXMEM->PCplus1 = IDEX->jumpaddress;
-    break;
-    // jal (not sure if I should update PC directly here too)
-    case 3:
-      registers[31] = IDEX->PCplus1 + 2;
-      EXMEM->PCplus1 = IDEX->jumpaddress;
-      break;
     // addi
     case 8: EXMEM->aluResult = IDEX->readRs + IDEX->immediate;
     break;
@@ -453,7 +516,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
         if (EXMEM->SignedData && MEMWB->readData >> 15) MEMWB->readData |= 0xFFFF0000;
     }
     // Read Words
-    else MEMWB->readData = memory[EXMEM->aluResult>>2];
+    else MEMWB->readData = memory[EXMEM->aluResult*4];
   }
   // Write to memory
   if(EXMEM->MemWrite){

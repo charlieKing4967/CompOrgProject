@@ -12,7 +12,7 @@ uint32_t registers[32];
 
 struct IFID_Reg {
   unsigned int PCplus1;
-
+  
   unsigned int Opcode;
   unsigned int Rs;
   unsigned int Rt;
@@ -93,5 +93,3 @@ struct MEMWB_Reg {
   bool RegWrite;
   bool MemtoReg;
 };
-
-IFID_Reg Flush;
