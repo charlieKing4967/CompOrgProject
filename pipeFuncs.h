@@ -41,7 +41,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     pc = IFID->jumpaddress-1;
     IFflush = 1;
   }
-
+  
   // Stall if dependency after load instruction
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline

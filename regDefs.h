@@ -6,13 +6,13 @@ int test;
 
 // MEMORY LOCATIONS
 uint32_t memory[1200];
-uint32_t programMemory[10000];
+int programMemory[10000];
 uint32_t registers[32];
 
 
 struct IFID_Reg {
   unsigned int PCplus1;
-  
+
   unsigned int Opcode;
   unsigned int Rs;
   unsigned int Rt;

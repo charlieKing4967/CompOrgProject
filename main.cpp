@@ -14,18 +14,20 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 int main(){
   pc = 0;
 
-  readProgram(programMemory, "Program1File1.txt");
+  registers[9] = 10;
+
+
+  programMemory[0] = 0x27BDFFE8;
+  programMemory[1] = 0xAFBE0014;
 
   for(int clock = 0; clock < 25; clock++){
-    cout << programMemory[pc] << "\n";
+    cout << pc << "     ";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
     execute(&IDEX, &EXMEMShadow, &MEMWB);
     memory_access(&EXMEM, &MEMWBShadow);
-    instruction_decode(&IFID,&IDEXShadow,&EXMEM);
-    execute(&IDEX,&EXMEMShadow,&MEMWB);
-    memory_access(&EXMEM,&MEMWBShadow);
+    cout << sizeof(programMemory[0]) << "\n";
 
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
@@ -34,9 +36,6 @@ int main(){
       IFID = IFIDShadow;
       pc++;
     }
-
   }
-
-
   return 0;
 }
