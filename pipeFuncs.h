@@ -228,7 +228,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
 
   // Calculating branch address
-  IDEX->branchPC = IFID->PCplus1+(IFID->immediate>>2);
+  IDEX->branchPC = IFID->PCplus1 + (int32_t)IFID->immediate;
 
   switch (IFID->Opcode){
     // beq
