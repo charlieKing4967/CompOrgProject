@@ -5,8 +5,8 @@ int stallCount;
 int test;
 
 // MEMORY LOCATIONS
-uint32_t memory[1200];
-int programMemory[10000];
+uint32_t memory[12000];
+uint32_t programMemory[10000];
 uint32_t registers[32];
 
 

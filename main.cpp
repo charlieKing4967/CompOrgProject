@@ -12,22 +12,22 @@ EXMEM_Reg EXMEM, EXMEMShadow;
 MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
-  pc = 0;
 
-  registers[9] = 10;
+  // read program
+  readProgram(programMemory, "Program1File1.txt");
 
+  // set up sp, fp, & pc
+  registers[29] = programMemory[0];
+  registers[30]= programMemory[1];
+  pc = programMemory[5];
 
-  programMemory[0] = 0x27BDFFE8;
-  programMemory[1] = 0xAFBE0014;
-
-  for(int clock = 0; clock < 25; clock++){
-    cout << pc << "     ";
+  for(int clock = 0; clock < 2000; clock++){
+    cout << clock << ": " << pc+1 << ": " << programMemory[pc] << "\n";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
     execute(&IDEX, &EXMEMShadow, &MEMWB);
     memory_access(&EXMEM, &MEMWBShadow);
-    cout << sizeof(programMemory[0]) << "\n";
 
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
