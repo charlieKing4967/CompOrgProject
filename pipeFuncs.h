@@ -35,11 +35,13 @@ void instruction_fetch(IFID_Reg *IFID){
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   // Jump detection
+  IFflush = 0;
   if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
     if(IFID->Opcode == 3) registers[31] = IFID->PCplus1+2;
     pc = IFID->jumpaddress-1;
+    IFflush = 1;
   }
-
+  
   // Stall if dependency after load instruction
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline
@@ -233,30 +235,35 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     case 4:
       if(IDEX->readRs == IDEX->readRt){
          pc = IDEX->branchPC;
+         IFflush = 1;
       }
     break;
     // bne
     case 5:
       if(IDEX->readRs != IDEX->readRt){
         pc = IDEX->branchPC;
+        IFflush = 1;
       }
     break;
     // blez
     case 6:
       if((int32_t)IDEX->readRs <= 0){
         pc = IDEX->branchPC;
+        IFflush = 1;
       }
     break;
     // bgtz
     case 7:
       if((int32_t)IDEX->readRs > 0){
         pc = IDEX->branchPC;
+        IFflush = 1;
       }
     break;
     // bltz
     case 1:
       if((IDEX->readRt == 0) && ((int32_t)IDEX->readRs < 0)){
         pc = IDEX->branchPC;
+        IFflush = 1;
       }
     break;
 
@@ -265,7 +272,22 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   // Calculating jump address
   if((IFID->Opcode == 0) && (IFID->funct == 8)){
     pc = IDEX->readRs - 1;
+    IFflush = 1;
   }
+
+  // If branching, flush IFID register
+  if(IFflush){
+    IFID->PCplus1 = 0;
+    IFID->Opcode = 0;
+    IFID->Rs = 0;
+    IFID->Rt = 0;
+    IFID->Rd = 0;
+    IFID->shamtl = 0;
+    IFID->funct = 0;
+    IFID->jumpaddress = 0;
+    IFID->immediate = 0;
+  }
+
 
   // Pass through PC
   IDEX->PCplus1 = IFID->PCplus1;
