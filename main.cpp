@@ -21,8 +21,8 @@ int main(){
   registers[30]= programMemory[1];
   pc = programMemory[5];
 
-  for(int clock = 0; clock < 2000; clock++){
-    cout << clock << ": " << pc+1 << ": " << programMemory[pc] << "\n";
+  for(int clock = 0; clock < 6000; clock++){
+    cout << clock << ": " << registers[3] << ":" << registers[9] << " "<< pc+1 << ": " << programMemory[pc] << "\n";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);

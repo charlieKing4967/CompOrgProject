@@ -29,6 +29,10 @@ void instruction_fetch(IFID_Reg *IFID){
       IFID->shamtl = 0;
       IFID->funct = 0;
       IFID->immediate = instruction & 0x0000FFFF;
+      // Sign extend immediate value
+      if(IFID->immediate >> 15){
+        IFID->immediate |= 0xFFFF0000;
+      }
     }
   }
 }
@@ -41,7 +45,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     pc = IFID->jumpaddress-1;
     IFflush = 1;
   }
-  
+
   // Stall if dependency after load instruction
   if((IDEX->MemRead) && ((IDEX->Rt == IFID->Rs) ||  (IDEX->Rt == IFID->Rt))){
     // Stall the pipeline
@@ -109,7 +113,6 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
       return;
     }
   }
-
 
   // Bit mask elements out of instruction
   IDEX->Opcode = IFID->Opcode;
@@ -204,11 +207,6 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   IDEX->readRs = registers[IDEX->Rs];
   IDEX->readRt = registers[IDEX->Rt];
 
-  // Sign extend immediate value
-  if(IDEX->immediate >> 15){
-    IFID->immediate |= 0xFFFF0000;
-  }
-
   // Branch Forwarding
   if(((IFID->Opcode >= 4) && (IFID->Opcode <= 7)) || ((IFID->Opcode == 0) && (IFID->funct == 8))){
     // R-Type
@@ -228,7 +226,7 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   }
 
   // Calculating branch address
-  IDEX->branchPC = IFID->PCplus1 + (int32_t)IFID->immediate;
+  IDEX->branchPC = IFID->PCplus1 + IFID->immediate;
 
   switch (IFID->Opcode){
     // beq
@@ -287,7 +285,6 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     IFID->jumpaddress = 0;
     IFID->immediate = 0;
   }
-
 
   // Pass through PC
   IDEX->PCplus1 = IFID->PCplus1;
