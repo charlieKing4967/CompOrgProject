@@ -1,7 +1,6 @@
 #include "regDefs.h"
 #include<iostream>
 #include<string>
-#include<cmath>
 
 using namespace std;
 
@@ -12,6 +11,10 @@ using namespace std;
 bool iValid[iCacheSize];
 int iTag[iCacheSize];
 int iData[iCacheSize][blockSize];
+
+bool dValid[dCacheSize];
+int dTag[dCacheSize];
+int dData[dCacheSize][blockSize];
 
 int programMemoryRead(){
     int blockOffset = pc & (blockSize-1);
@@ -33,30 +36,87 @@ int programMemoryRead(){
     return iData[index][blockOffset];
 }
 
+int dataMemoryRead(int address){
+    int blockOffset = address & (blockSize-1);
+    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
+    int tag = address / (blockSize*dCacheSize);
+    if((dTag[index] == tag) && (dValid[index])){
+        // cache hit
+        cout << "Cache Hit\n";
+    }
+    else{
+        // cache miss
+        for(int i = 0; i <= (blockSize-1); i++){
+            dData[index][i] = memory[(address & ~(blockSize-1)) + i];
+        }
+        dValid[index] = 1;
+        dTag[index] = tag;
+        cout << "Cache Miss\n";
+    }
+    return dData[index][blockOffset];
+}
+
+/*
+ // Write though
+void dataMemoryWrite(int address, int data){
+    int blockOffset = address & (blockSize-1);
+    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
+    int tag = address / (blockSize*dCacheSize);
+    if((dTag[index] == tag) && (dValid[index])){
+        // Write hit
+        dData[index][blockOffset] = data;
+        cout << "Write Hit\n";
+    }
+    else{
+        // Write miss
+        for(int i = 0; i <= (blockSize-1); i++){
+            dData[index][i] = memory[(address & ~(blockSize-1)) + i];
+        }
+        dValid[index] = 1;
+        dTag[index] = tag;
+        dData[index][blockOffset] = data;
+        cout <<"Write Miss\n";
+    }
+    memory[address] = data;
+}
+*/
+
+// Write back
+void dataMemoryWrite(int address, int data){
+   int blockOffset = address & (blockSize-1);
+   int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
+   int tag = address / (blockSize*dCacheSize);
+   if((dTag[index] == tag) && (dValid[index])){
+       // Write hit
+       dData[index][blockOffset] = data;
+       cout << "Write Hit\n";
+   }
+   else{
+       // Write miss
+       // Write soon-to-be-overwrited data to memory
+       if(dValid[index]){
+           int repAddress = dTag[index] * blockSize * dCacheSize;
+           repAddress = repAddress + index*blockSize;
+           for(int i = 0; i <= blockSize-1; i++){
+               memory[repAddress+i] = dData[index][i];
+           }
+           cout << "Memory Write\n";
+       }
+       for(int i = 0; i <= (blockSize-1); i++){
+           dData[index][i] = memory[(address & ~(blockSize-1)) + i];
+       }
+       dValid[index] = 1;
+       dTag[index] = tag;
+       dData[index][blockOffset] = data;
+       cout <<"Write Miss\n";
+   }
+}
+
 int main(){
-    programMemory[0] = 5;
-    programMemory[1] = 10;
-    programMemory[2] = 15;
-    programMemory[3] = 20;
-    programMemory[4] = 50;
-    int result;
-    pc = 5;
-    result = programMemoryRead();
-    cout << result << "\n";
-    pc = 4;
-    result = programMemoryRead();
-    cout << result << "\n";
-    pc = 1;
-    result = programMemoryRead();
-    cout << result << "\n";
-    pc = 3;
-    result = programMemoryRead();
-    cout << result << "\n";
-    pc = 4;
-    result = programMemoryRead();
-    cout << result << "\n";
-    pc = 8;
-    result = programMemoryRead();
-    cout << result << "\n";
+    dataMemoryWrite(4,30);
+    dataMemoryWrite(4,20);
+    dataMemoryWrite(5,15);
+    dataMemoryWrite(37,20);
+    cout << memory[37];
 
 }
