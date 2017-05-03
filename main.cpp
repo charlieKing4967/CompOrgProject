@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "util.h"
 #include "pipeFuncs.h"
 #include "readFunc.h"
@@ -13,18 +14,18 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
 
-  // read program
-  readProgram(programMemory, "Program1File1.txt");
+  // Read program
+  readProgram(Memory, "Program1File1.txt");
 
   // set up sp, fp, & pc
-  registers[29] = programMemory[0];
-  registers[30]= programMemory[1];
-  pc = programMemory[5];
+  registers[29] = Memory[0];
+  registers[30]= Memory[1];
+  pc = Memory[5];
 
   int cycles = 0;
 
   while (pc != 0){
-    //cout << clock << ": " << pc+1 << ": " << programMemory[pc] << "\n";
+    //cout << x << ": " << pc+1 << ": " << Memory[pc] << "\n";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
@@ -41,11 +42,14 @@ int main(){
     cycles++;
   }
   cout << "Cycles: " << cycles << "\n";
+  cout << Memory[6] << "\t" << Memory[7] << "\t" << Memory[8] << "\t" << Memory[9] << "\n";
+
   /**
   for (int x = 0; x < 32; x++) {
       if (x % 4 == 0) cout << "\n";
       cout << x << ": " << registers[x] << "\t\t";
   }
-  return 0;
   **/
+  return 0;
+
 }

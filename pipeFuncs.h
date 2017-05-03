@@ -4,7 +4,7 @@ IDEX_Reg zeroReg;
 
 
 void instruction_fetch(IFID_Reg *IFID){
-  uint32_t instruction = programMemory[pc];
+  uint32_t instruction = Memory[pc];
   //pc++;
   IFID->PCplus1 = pc;
 
@@ -461,31 +461,31 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   if(EXMEM->MemRead){
     // Read bytes
     if(EXMEM->ByteData){
-        MEMWB->readData = (memory[EXMEM->aluResult>>2] >> ((3 - (EXMEM->aluResult & 3)) << 3)) & 0xFF;
+        MEMWB->readData = (Memory[EXMEM->aluResult>>2] >> ((3 - (EXMEM->aluResult & 3)) << 3)) & 0xFF;
         if (EXMEM->SignedData && MEMWB->readData >> 7) MEMWB->readData |= 0xFFFFFF00;
     }
     // Read Halfwords
     else if(EXMEM->HalfData){
-        MEMWB->readData = (memory[EXMEM->aluResult>>2] >> ((1 - (EXMEM->aluResult>>1 & 1)) << 4)) & 0xFFFF;
+        MEMWB->readData = (Memory[EXMEM->aluResult>>2] >> ((1 - (EXMEM->aluResult>>1 & 1)) << 4)) & 0xFFFF;
         if (EXMEM->SignedData && MEMWB->readData >> 15) MEMWB->readData |= 0xFFFF0000;
     }
     // Read Words
-    else MEMWB->readData = memory[EXMEM->aluResult>>2];
+    else MEMWB->readData = Memory[EXMEM->aluResult>>2];
   }
   // Write to memory
   if(EXMEM->MemWrite){
     // Write Bytes
     if(EXMEM->ByteData){
-        memory[EXMEM->aluResult>>2] &= ~(0xFF << ((3 - (EXMEM->aluResult & 3)) << 3));
-        memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFF) << ((3 - (EXMEM->aluResult & 3)) << 3);
+        Memory[EXMEM->aluResult>>2] &= ~(0xFF << ((3 - (EXMEM->aluResult & 3)) << 3));
+        Memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFF) << ((3 - (EXMEM->aluResult & 3)) << 3);
     }
     // Write Halfwords
     else if(EXMEM->HalfData){
-        memory[EXMEM->aluResult>>2] &= ~(0xFFFF << ((1 - (EXMEM->aluResult>>1 & 1)) << 4));
-        memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFFFF) << ((1 - (EXMEM->aluResult>>1 & 1)) << 4);
+        Memory[EXMEM->aluResult>>2] &= ~(0xFFFF << ((1 - (EXMEM->aluResult>>1 & 1)) << 4));
+        Memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFFFF) << ((1 - (EXMEM->aluResult>>1 & 1)) << 4);
     }
     // Write Words
-    else memory[EXMEM->aluResult>>2] = EXMEM->readRt;
+    else Memory[EXMEM->aluResult>>2] = EXMEM->readRt;
   }
 
   MEMWB->writeReg = EXMEM->writeReg;
@@ -497,7 +497,8 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 }
 
 void write_back(MEMWB_Reg *MEMWB){
-  if(MEMWB->RegWrite){
+  // KINDA REALLY FUCKING BROKEN
+  if(MEMWB->RegWrite && MEMWB->writeReg != 0){
     if(MEMWB->MemtoReg){
       registers[MEMWB->writeReg] = MEMWB->readData;
     }
