@@ -21,8 +21,10 @@ int main(){
   registers[30]= programMemory[1];
   pc = programMemory[5];
 
-  for(int clock = 0; clock < 6000; clock++){
-    cout << clock << ": " << registers[3] << ":" << registers[9] << " "<< pc+1 << ": " << programMemory[pc] << "\n";
+  int cycles = 0;
+
+  while (pc != 0){
+    //cout << clock << ": " << pc+1 << ": " << programMemory[pc] << "\n";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
@@ -36,6 +38,14 @@ int main(){
       IFID = IFIDShadow;
       pc++;
     }
+    cycles++;
+  }
+  cout << "Cycles: " << cycles << "\n";
+  /**
+  for (int x = 0; x < 32; x++) {
+      if (x % 4 == 0) cout << "\n";
+      cout << x << ": " << registers[x] << "\t\t";
   }
   return 0;
+  **/
 }
