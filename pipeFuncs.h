@@ -480,32 +480,38 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   // Read from memory
   if(EXMEM->MemRead){
     // Read bytes
+    uint32_t data = dataMemoryRead(EXMEM->aluResult>>2);
+    //uint32_t data = Memory[EXMEM->aluResult>>2];
     if(EXMEM->ByteData){
-        MEMWB->readData = (Memory[EXMEM->aluResult>>2] >> ((3 - (EXMEM->aluResult & 3)) << 3)) & 0xFF;
+        MEMWB->readData = (data >> ((3 - (EXMEM->aluResult & 3)) << 3)) & 0xFF;
         if (EXMEM->SignedData && MEMWB->readData >> 7) MEMWB->readData |= 0xFFFFFF00;
     }
     // Read Halfwords
     else if(EXMEM->HalfData){
-        MEMWB->readData = (Memory[EXMEM->aluResult>>2] >> ((1 - (EXMEM->aluResult>>1 & 1)) << 4)) & 0xFFFF;
+        MEMWB->readData = (data >> ((1 - (EXMEM->aluResult>>1 & 1)) << 4)) & 0xFFFF;
         if (EXMEM->SignedData && MEMWB->readData >> 15) MEMWB->readData |= 0xFFFF0000;
     }
     // Read Words
-    else MEMWB->readData = Memory[EXMEM->aluResult>>2];
+    else MEMWB->readData = data;
   }
   // Write to memory
   if(EXMEM->MemWrite){
+    uint32_t data = dataMemoryRead(EXMEM->aluResult>>2);
+    //uint32_t data = Memory[EXMEM->aluResult>>2];
     // Write Bytes
     if(EXMEM->ByteData){
-        Memory[EXMEM->aluResult>>2] &= ~(0xFF << ((3 - (EXMEM->aluResult & 3)) << 3));
-        Memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFF) << ((3 - (EXMEM->aluResult & 3)) << 3);
+        data &= ~(0xFF << ((3 - (EXMEM->aluResult & 3)) << 3));
+        data |= (EXMEM->readRt & 0xFF) << ((3 - (EXMEM->aluResult & 3)) << 3);
     }
     // Write Halfwords
     else if(EXMEM->HalfData){
-        Memory[EXMEM->aluResult>>2] &= ~(0xFFFF << ((1 - (EXMEM->aluResult>>1 & 1)) << 4));
-        Memory[EXMEM->aluResult>>2] |= (EXMEM->readRt & 0xFFFF) << ((1 - (EXMEM->aluResult>>1 & 1)) << 4);
+        data &= ~(0xFFFF << ((1 - (EXMEM->aluResult>>1 & 1)) << 4));
+        data |= (EXMEM->readRt & 0xFFFF) << ((1 - (EXMEM->aluResult>>1 & 1)) << 4);
     }
     // Write Words
-    else Memory[EXMEM->aluResult>>2] = EXMEM->readRt;
+    else data = EXMEM->readRt;
+    dataMemoryWrite(EXMEM->aluResult>>2, data);
+    //Memory[EXMEM->aluResult>>2] = data;
   }
 
   MEMWB->writeReg = EXMEM->writeReg;
