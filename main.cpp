@@ -25,7 +25,6 @@ int main(){
   int cycles = 0;
 
   while (pc != 0){
-    //cout << x << ": " << pc+1 << ": " << Memory[pc] << "\n";
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
@@ -38,12 +37,12 @@ int main(){
     if(!stall){
       IFID = IFIDShadow;
       pc++;
+      cycles++;
     }
-    cycles++;
+
   }
   cout << "Cycles: " << cycles << "\n";
   cout << Memory[6] << "\t" << Memory[7] << "\t" << Memory[8] << "\t" << Memory[9] << "\n";
-
   /**
   for (int x = 0; x < 32; x++) {
       if (x % 4 == 0) cout << "\n";
