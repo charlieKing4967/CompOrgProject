@@ -41,8 +41,8 @@ int main(){
     }
   }
   cout << "Cycles: " << cycles << "\n";
-  cout << Memory[6] << "\t" << Memory[7] << "\t" << Memory[8] << "\t" << Memory[9] << "\n";
- 
+  cout << dataMemoryRead(6) << "\t" << Memory[7] << "\t" << dataMemoryRead(8) << "\t" << dataMemoryRead(9) << "\n";
+
   /**
   for (int x = 0; x < 32; x++) {
       if (x % 4 == 0) cout << "\n";

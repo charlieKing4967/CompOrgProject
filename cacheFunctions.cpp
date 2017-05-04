@@ -36,6 +36,8 @@ int programMemoryRead(){
     return iData[index][blockOffset];
 }
 
+/*
+// Write through
 int dataMemoryRead(int address){
     int blockOffset = address & (blockSize-1);
     int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
@@ -46,6 +48,38 @@ int dataMemoryRead(int address){
     }
     else{
         // cache miss
+        for(int i = 0; i <= (blockSize-1); i++){
+            dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
+        }
+        cout << "Memory Read\n";
+        dValid[index] = 1;
+        dTag[index] = tag;
+        cout << "Cache Miss\n";
+    }
+    return dData[index][blockOffset];
+}
+*/
+
+// Write-Back
+int dataMemoryRead(int address){
+    int blockOffset = address & (blockSize-1);
+    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
+    int tag = address / (blockSize*dCacheSize);
+    if((dTag[index] == tag) && (dValid[index])){
+        // cache hit
+        cout << "Cache Hit\n";
+    }
+    else{
+        // cache miss
+        // Write soon-to-be-overwrited data to memory
+        if(dValid[index]){
+            int repAddress = dTag[index] * blockSize * dCacheSize;
+            repAddress = repAddress + index*blockSize;
+            for(int i = 0; i <= blockSize-1; i++){
+                Memory[repAddress+i] = dData[index][i];
+            }
+            cout << "Memory Write\n";
+        }
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
@@ -114,11 +148,10 @@ void dataMemoryWrite(int address, int data){
 }
 
 int main(){
-    dataMemoryWrite(4,30);
-    dataMemoryWrite(4,20);
-    cout << dataMemoryRead(4) << "\n";
-
-    dataMemoryWrite(5,15);
-    dataMemoryWrite(37,20);
-    cout << dataMemoryRead(5);
+    dataMemoryWrite(0,30);
+    dataMemoryWrite(1,20);
+    dataMemoryWrite(2,15);
+    dataMemoryWrite(3,20);
+    dataMemoryRead(35);
+    cout << dataMemoryRead(3) << "\n";
 }

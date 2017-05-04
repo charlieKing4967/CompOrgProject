@@ -1,4 +1,3 @@
-
 #define iCacheSize 8
 #define dCacheSize 8
 #define blockSize 4
@@ -43,6 +42,8 @@ uint32_t programMemoryRead(){
     return iData[index][blockOffset];
 }
 
+/*
+// Write-Through
 uint32_t dataMemoryRead(uint32_t address){
     int blockOffset = address & (blockSize-1);
     int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
@@ -53,6 +54,38 @@ uint32_t dataMemoryRead(uint32_t address){
     }
     else{
         // cache miss
+        for(int i = 0; i <= (blockSize-1); i++){
+            dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
+        }
+        //cout << "Memory Read\n";
+        dValid[index] = 1;
+        dTag[index] = tag;
+        //cout << "Cache Miss\n";
+    }
+    return dData[index][blockOffset];
+}
+*/
+
+// Write Back
+uint32_t dataMemoryRead(uint32_t address){
+    int blockOffset = address & (blockSize-1);
+    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
+    int tag = address / (blockSize*dCacheSize);
+    if((dTag[index] == tag) && (dValid[index])){
+        // cache hit
+        //cout << "Cache Hit\n";
+    }
+    else{
+        // cache miss
+        // Write soon-to-be-overwrited data to memory
+        if(dValid[index]){
+            int repAddress = dTag[index] * blockSize * dCacheSize;
+            repAddress = repAddress + index*blockSize;
+            for(int i = 0; i <= blockSize-1; i++){
+                Memory[repAddress+i] = dData[index][i];
+            }
+            //cout << "Memory Write\n";
+        }
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }

@@ -2,7 +2,9 @@ unsigned int pc;
 bool stall;
 bool IFflush;
 int stallCount;
-int test;
+int test1;
+int test2;
+int test3;
 
 // MEMORY LOCATIONS
 uint32_t Memory[1200];
