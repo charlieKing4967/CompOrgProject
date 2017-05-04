@@ -35,7 +35,7 @@ int main(){
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;
     if(!stall){
-      IFID = IFIDShadow;
+      if(!IFflush) IFID = IFIDShadow;
       pc++;
       cycles++;
     }

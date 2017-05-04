@@ -259,6 +259,10 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
     IFflush = 1;
   }
 
+  // Flush instruction if it writes to zero
+  // if (IDEX->Opcode == 0 && IDEX->RegWrite && IDEX->Rd == 0) IFflush = 1;
+  // else if (IDEX->RegWrite && IDEX->Rt == 0) IFflush = 1;
+
   // If branching, flush IFID register
   if(IFflush){
       IFID->PCplus1 = 0;
@@ -513,7 +517,6 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
 }
 
 void write_back(MEMWB_Reg *MEMWB){
-  // KINDA REALLY FUCKING BROKEN
   if(MEMWB->RegWrite && MEMWB->writeReg != 0){
     if(MEMWB->MemtoReg){
       registers[MEMWB->writeReg] = MEMWB->readData;
