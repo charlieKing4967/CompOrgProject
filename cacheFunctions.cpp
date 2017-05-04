@@ -49,6 +49,7 @@ int dataMemoryRead(int address){
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
+        cout << "Memory Read\n";
         dValid[index] = 1;
         dTag[index] = tag;
         cout << "Cache Miss\n";
@@ -116,6 +117,10 @@ int main(){
     dataMemoryWrite(4,30);
     dataMemoryWrite(4,20);
     dataMemoryWrite(5,15);
+    dataMemoryWrite(12,666);
+    cout << dataMemoryRead(12) << '\n';
+    dataMemoryRead(8);
+    dataMemoryWrite(13,420);
     dataMemoryWrite(37,20);
     cout << Memory[5] << "\n";
 }

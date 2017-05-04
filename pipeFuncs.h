@@ -39,9 +39,11 @@ void instruction_fetch(IFID_Reg *IFID){
 
 void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   // Jump detection
+  IFflush = 0;
   if((IFID->Opcode == 2) || (IFID->Opcode == 3)){
     if(IFID->Opcode == 3) registers[31] = IFID->PCplus1+2;
     pc = IFID->jumpaddress-1;
+    IFflush = 1;
   }
 
   // Stall if dependency after load instruction
@@ -254,6 +256,20 @@ void instruction_decode(IFID_Reg *IFID,IDEX_Reg *IDEX,EXMEM_Reg *EXMEM){
   if((IFID->Opcode == 0) && (IFID->funct == 8)){
     pc = IDEX->readRs - 1;
     IDEX->RegWrite = 0;
+    IFflush = 1;
+  }
+
+  // If branching, flush IFID register
+  if(IFflush){
+      IFID->PCplus1 = 0;
+      IFID->Opcode = 0;
+      IFID->Rs = 0;
+      IFID->Rt = 0;
+      IFID->Rd = 0;
+      IFID->shamtl = 0;
+      IFID->funct = 0;
+      IFID->jumpaddress = 0;
+      IFID->immediate = 0;
   }
 
   // Pass through PC

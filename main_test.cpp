@@ -14,36 +14,34 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 
 int main(){
 
-  // Read program
-  readProgram(Memory, "Program1File1.txt");
-
-  // set up sp, fp, & pc
-  registers[29] = Memory[0];
-  registers[30]= Memory[1];
-  pc = Memory[5];
+    registers[9] = 0;
+    registers[10] = 15;
 
   int cycles = 0;
+  //Memory[1] = 0x21290001;
+  Memory[2] = 0x0149580A;
+  //IMemory[2] = 0x01200008;
 
-  while (pc != 0){
+  while (pc <= 30){
+      cout << pc << "       ";
+
     write_back(&MEMWB);
     instruction_fetch(&IFIDShadow);
     instruction_decode(&IFID, &IDEXShadow, &EXMEM);
     execute(&IDEX, &EXMEMShadow, &MEMWB);
     memory_access(&EXMEM, &MEMWBShadow);
 
+    cout << registers[11] << "\n";
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;
     if(!stall){
       IFID = IFIDShadow;
       pc++;
-      cycles++;
     }
+    cycles++;
 
   }
-  cout << "Cycles: " << cycles << "\n";
-  cout << Memory[6] << "\t" << Memory[7] << "\t" << Memory[8] << "\t" << Memory[9] << "\n";
-
   /**
   for (int x = 0; x < 32; x++) {
       if (x % 4 == 0) cout << "\n";
