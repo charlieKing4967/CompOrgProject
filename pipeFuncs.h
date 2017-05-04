@@ -446,7 +446,7 @@ void execute(IDEX_Reg *IDEX,EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
     // Sub-opcode Section (for non standard instruction)
     case 31: // SPECIAL3 (R-type like)
       // seb
-      if(IDEX->shamtl == 16) EXMEM->aluResult = (IDEX->readRt >> 31) ? (IDEX->readRt >> 24) | 0xffffff00 : (IDEX->readRt >> 24);
+      if(IDEX->shamtl == 16) EXMEM->aluResult = (IDEX->readRt >> 7) ? IDEX->readRt | 0xffffff00 : IDEX->readRt;
     break;
 
   }
