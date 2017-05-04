@@ -1,10 +1,11 @@
 #include "regDefs.h"
+#include "cacheFunctions.h"
 
 IDEX_Reg zeroReg;
 
 
 void instruction_fetch(IFID_Reg *IFID){
-  uint32_t instruction = Memory[pc];
+  uint32_t instruction = programMemoryRead();
   //pc++;
   IFID->PCplus1 = pc;
 
