@@ -120,4 +120,5 @@ int main(){
 
     dataMemoryWrite(5,15);
     dataMemoryWrite(37,20);
+    cout << dataMemoryRead(5);
 }

@@ -15,11 +15,13 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 int main(){
 
     registers[9] = 0;
-    registers[10] = 15;
+    registers[10] = 30;
+
+    Memory[30] = 15;
 
   int cycles = 0;
-  //Memory[1] = 0x21290001;
-  Memory[2] = 0x0149580A;
+  //Memory[1] = 0x8D490000;
+  //Memory[2] = 0x0149580A;
   //IMemory[2] = 0x01200008;
 
   while (pc <= 30){
@@ -31,7 +33,7 @@ int main(){
     execute(&IDEX, &EXMEMShadow, &MEMWB);
     memory_access(&EXMEM, &MEMWBShadow);
 
-    cout << registers[11] << "\n";
+    cout << dataShadowRead(30) << "\n";
     IDEX = IDEXShadow;
     EXMEM = EXMEMShadow;
     MEMWB = MEMWBShadow;

@@ -11,7 +11,19 @@ bool dValid[dCacheSize];
 int dTag[dCacheSize];
 int dData[dCacheSize][blockSize];
 
-int programMemoryRead(){
+uint32_t dataShadowRead(uint32_t address){
+    int blockOffset = address & (blockSize-1);
+    int index = (((iCacheSize-1)*blockSize)&address)/blockSize;
+    int tag = address / (blockSize*iCacheSize);
+    if((iTag[index] == tag) && (iValid[index])){
+        return dData[index][blockOffset];
+    }
+    else{
+        return Memory[address];
+    }
+}
+
+uint32_t programMemoryRead(){
     int blockOffset = pc & (blockSize-1);
     int index = (((iCacheSize-1)*blockSize)&pc)/blockSize;
     int tag = pc / (blockSize*iCacheSize);
@@ -31,7 +43,7 @@ int programMemoryRead(){
     return iData[index][blockOffset];
 }
 
-int dataMemoryRead(int address){
+uint32_t dataMemoryRead(uint32_t address){
     int blockOffset = address & (blockSize-1);
     int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
     int tag = address / (blockSize*dCacheSize);
@@ -54,14 +66,14 @@ int dataMemoryRead(int address){
 
 /*
  // Write though
-void dataMemoryWrite(int address, int data){
+void dataMemoryWrite(uint32_t address, uint32_t data){
     int blockOffset = address & (blockSize-1);
     int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
     int tag = address / (blockSize*dCacheSize);
     if((dTag[index] == tag) && (dValid[index])){
         // Write hit
         dData[index][blockOffset] = data;
-        cout << "Write Hit\n";
+        //cout << "Write Hit\n";
     }
     else{
         // Write miss
@@ -71,14 +83,14 @@ void dataMemoryWrite(int address, int data){
         dValid[index] = 1;
         dTag[index] = tag;
         dData[index][blockOffset] = data;
-        cout <<"Write Miss\n";
+        //cout <<"Write Miss\n";
     }
     Memory[address] = data;
 }
 */
 
 // Write back
-void dataMemoryWrite(int address, int data){
+void dataMemoryWrite(uint32_t address, uint32_t data){
    int blockOffset = address & (blockSize-1);
    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
    int tag = address / (blockSize*dCacheSize);

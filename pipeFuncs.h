@@ -1,7 +1,9 @@
 #include "regDefs.h"
 #include "cacheFunctions.h"
-
+#include <iostream>
 IDEX_Reg zeroReg;
+
+using namespace std;
 
 
 void instruction_fetch(IFID_Reg *IFID){
@@ -497,7 +499,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   }
   // Write to memory
   if(EXMEM->MemWrite){
-    uint32_t data = dataMemoryRead(EXMEM->aluResult>>2);
+    uint32_t data = dataShadowRead(EXMEM->aluResult>>2);
     //uint32_t data = Memory[EXMEM->aluResult>>2];
     // Write Bytes
     if(EXMEM->ByteData){
