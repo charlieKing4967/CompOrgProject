@@ -36,7 +36,7 @@ int programMemoryRead(){
     return iData[index][blockOffset];
 }
 
-/*
+
 // Write through
 int dataMemoryRead(int address){
     int blockOffset = address & (blockSize-1);
@@ -58,8 +58,8 @@ int dataMemoryRead(int address){
     }
     return dData[index][blockOffset];
 }
-*/
 
+/*
 // Write-Back
 int dataMemoryRead(int address){
     int blockOffset = address & (blockSize-1);
@@ -90,8 +90,8 @@ int dataMemoryRead(int address){
     }
     return dData[index][blockOffset];
 }
+*/
 
-/*
  // Write though
 void dataMemoryWrite(int address, int data){
     int blockOffset = address & (blockSize-1);
@@ -114,8 +114,8 @@ void dataMemoryWrite(int address, int data){
     }
     Memory[address] = data;
 }
-*/
 
+/*
 // Write back
 void dataMemoryWrite(int address, int data){
    int blockOffset = address & (blockSize-1);
@@ -155,3 +155,4 @@ int main(){
     dataMemoryRead(35);
     cout << dataMemoryRead(3) << "\n";
 }
+*/
