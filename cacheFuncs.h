@@ -124,11 +124,13 @@ void dataMemoryWrite_wt(uint32_t address, uint32_t data){
         // Write hit
         dData[index][blockOffset] = data;
         dhit++;
+        cycles += 8;
         //cout << "Write Hit\n";
     }
     else{
         // Write miss
         dmiss++;
+        cycles += 8 + 2*(blockSize-1);
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
@@ -137,7 +139,6 @@ void dataMemoryWrite_wt(uint32_t address, uint32_t data){
         dData[index][blockOffset] = data;
         //cout <<"Write Miss\n";
     }
-    cycles += 8 + 2*(blockSize-1);
     Memory[address] = data;
 }
 
