@@ -15,14 +15,20 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 int main(){
 
   // Read program
-  readProgram(Memory, "Program2File1.txt");
+  readProgram(Memory, "Program1File1.txt");
 
   // Set up sp, fp, & pc
   registers[29] = Memory[0];
   registers[30]= Memory[1];
   pc = Memory[5];
 
-  int cycles = 0;
+  // set up cpi values
+  cycles = 0;
+  instructions = 0;
+
+  // set up hit values;
+  ihit = 0; imiss = 0;
+  dhit = 0; dmiss = 0;
 
   while (pc != 0){
     write_back(&MEMWB);
@@ -37,11 +43,18 @@ int main(){
     if(!stall){
       if(!IFflush) IFID = IFIDShadow;
       pc++;
-      cycles++;
+      instructions++;
     }
+    cycles++;
   }
-  cout << "Cycles: " << cycles << "\n";
-  cout << dataMemoryRead(6) << "\t" << dataMemoryRead(7) << "\t" << dataMemoryRead(8) << "\t" << dataMemoryRead(9) << "\n";
+
+  cout << "Cycles: " << cycles << "\tInstructions: " << instructions << "\tCPI: " << cycles/(float)instructions << "\n";
+  cout << "ihit: " << 100*ihit/(float)(ihit+imiss) << "%\tdhit: " << 100*dhit/(float)(dhit+dmiss) << "%\n";
+
+  cout << "Memory 6: " << dataMemoryRead(6) << "\n";
+  cout << "Memory 7: " << dataMemoryRead(7) << "\n";
+  cout << "Memory 8: " << dataMemoryRead(8) << "\n";
+  cout << "Memory 9: " << dataMemoryRead(9) << "\n";
 
   /**
   for (int x = 0; x < 32; x++) {

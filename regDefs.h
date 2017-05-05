@@ -6,6 +6,14 @@ int test1;
 int test2;
 int test3;
 
+int cycles;
+int instructions;
+
+int ihit;
+int imiss;
+int dhit;
+int dmiss;
+
 // MEMORY LOCATIONS
 uint32_t Memory[1200];
 uint32_t registers[32];
