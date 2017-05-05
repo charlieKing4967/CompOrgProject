@@ -1,5 +1,5 @@
-#define iCacheSize 64
-#define dCacheSize 1024
+#define iCacheSize 64/4
+#define dCacheSize 1024/4
 #define blockSize 1
 #define writeBack 0
 
