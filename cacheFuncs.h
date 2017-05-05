@@ -22,7 +22,7 @@ uint32_t programMemoryRead(){
     }
     else{
         // cache miss
-        cycles += 7 + 2*(blockSize-1);
+        cycles += 8 + 2*(blockSize-1);
         imiss++;
         for(int i = 0; i <= (blockSize-1); i++){
             iData[index][i] = Memory[(pc & ~(blockSize-1)) + i];
@@ -46,7 +46,7 @@ uint32_t dataShadowRead_wt(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 7 + 2*(blockSize-1);
+        cycles += 8 + 2*(blockSize-1);
         dmiss++;
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
@@ -71,7 +71,7 @@ uint32_t dataShadowRead_wb(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 7 + 2*(blockSize-1);
+        cycles += 8 + 2*(blockSize-1);
         dmiss++;
         // Write soon-to-be-overwrited data to memory
         if(dValid[index]){
@@ -105,7 +105,7 @@ uint32_t dataMemoryRead_wt(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 7 + 2*(blockSize-1);
+        cycles += 8 + 2*(blockSize-1);
         dmiss++;
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
@@ -130,7 +130,7 @@ uint32_t dataMemoryRead_wb(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 7 + 2*(blockSize-1);
+        cycles += 8 + 2*(blockSize-1);
         dmiss++;
         // Write soon-to-be-overwrited data to memory
         if(dValid[index]){
