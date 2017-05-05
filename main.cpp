@@ -15,7 +15,7 @@ MEMWB_Reg MEMWB, MEMWBShadow;
 int main(){
 
   // Read program
-  readProgram(Memory, "Program1File1.txt");
+  readProgram(Memory, "Program2File1.txt");
 
   // Set up sp, fp, & pc
   registers[29] = Memory[0];

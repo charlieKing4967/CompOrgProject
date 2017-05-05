@@ -1,7 +1,7 @@
-#define iCacheSize 64/4
-#define dCacheSize 1024/4
+#define iCacheSize 256/4
+#define dCacheSize 128/4
 #define blockSize 1
-#define writeBack 0
+#define writeBack 1
 
 bool iValid[iCacheSize];
 int iTag[iCacheSize];
@@ -22,8 +22,8 @@ uint32_t programMemoryRead(){
     }
     else{
         // cache miss
-        cycles += 8 + 2*(blockSize-1);
         imiss++;
+        cycles += 8 + 2*(blockSize-1);
         for(int i = 0; i <= (blockSize-1); i++){
             iData[index][i] = Memory[(pc & ~(blockSize-1)) + i];
         }
@@ -36,61 +36,24 @@ uint32_t programMemoryRead(){
 
 // Write-Through
 uint32_t dataShadowRead_wt(uint32_t address){
-    int blockOffset = address & (blockSize-1);
-    int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
-    int tag = address / (blockSize*dCacheSize);
-    if((dTag[index] == tag) && (dValid[index])){
-        // cache hit
-        dhit++;
-        //cout << "Cache Hit\n";
-    }
-    else{
-        // cache miss
-        cycles += 8 + 2*(blockSize-1);
-        dmiss++;
-        for(int i = 0; i <= (blockSize-1); i++){
-            dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
-        }
-        //cout << "Memory Read\n";
-        dValid[index] = 1;
-        dTag[index] = tag;
-        //cout << "Cache Miss\n";
-    }
-    return dData[index][blockOffset];
+    return Memory[address];
 }
 
 // Write Back
 uint32_t dataShadowRead_wb(uint32_t address){
+    int data;
     int blockOffset = address & (blockSize-1);
     int index = (((dCacheSize-1)*blockSize)&address)/blockSize;
     int tag = address / (blockSize*dCacheSize);
     if((dTag[index] == tag) && (dValid[index])){
         // cache hit
-        dhit++;
         //cout << "Cache Hit\n";
+        data = dData[index][blockOffset];
     }
     else{
-        // cache miss
-        cycles += 8 + 2*(blockSize-1);
-        dmiss++;
-        // Write soon-to-be-overwrited data to memory
-        if(dValid[index]){
-            int repAddress = dTag[index] * blockSize * dCacheSize;
-            repAddress = repAddress + index*blockSize;
-            for(int i = 0; i <= blockSize-1; i++){
-                Memory[repAddress+i] = dData[index][i];
-            }
-            //cout << "Memory Write\n";
-        }
-        for(int i = 0; i <= (blockSize-1); i++){
-            dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
-        }
-        //cout << "Memory Read\n";
-        dValid[index] = 1;
-        dTag[index] = tag;
-        //cout << "Cache Miss\n";
+        data = Memory[address];
     }
-    return dData[index][blockOffset];
+    return data;
 }
 
 // Write-Through
@@ -105,8 +68,8 @@ uint32_t dataMemoryRead_wt(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 8 + 2*(blockSize-1);
         dmiss++;
+        cycles += 8 + 2*(blockSize-1);
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
@@ -130,7 +93,6 @@ uint32_t dataMemoryRead_wb(uint32_t address){
     }
     else{
         // cache miss
-        cycles += 8 + 2*(blockSize-1);
         dmiss++;
         // Write soon-to-be-overwrited data to memory
         if(dValid[index]){
@@ -141,6 +103,7 @@ uint32_t dataMemoryRead_wb(uint32_t address){
             }
             //cout << "Memory Write\n";
         }
+        cycles += 8 + 2*(blockSize-1);
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
@@ -160,10 +123,12 @@ void dataMemoryWrite_wt(uint32_t address, uint32_t data){
     if((dTag[index] == tag) && (dValid[index])){
         // Write hit
         dData[index][blockOffset] = data;
+        dhit++;
         //cout << "Write Hit\n";
     }
     else{
         // Write miss
+        dmiss++;
         for(int i = 0; i <= (blockSize-1); i++){
             dData[index][i] = Memory[(address & ~(blockSize-1)) + i];
         }
@@ -172,6 +137,7 @@ void dataMemoryWrite_wt(uint32_t address, uint32_t data){
         dData[index][blockOffset] = data;
         //cout <<"Write Miss\n";
     }
+    cycles += 8 + 2*(blockSize-1);
     Memory[address] = data;
 }
 
@@ -183,12 +149,15 @@ void dataMemoryWrite_wb(uint32_t address, uint32_t data){
    if((dTag[index] == tag) && (dValid[index])){
        // Write hit
        dData[index][blockOffset] = data;
+       dhit++;
        //cout << "Write Hit\n";
    }
    else{
        // Write miss
        // Write soon-to-be-overwrited data to memory
+       dmiss++;
        if(dValid[index]){
+           cycles += 8 + 2*(blockSize-1);
            int repAddress = dTag[index] * blockSize * dCacheSize;
            repAddress = repAddress + index*blockSize;
            for(int i = 0; i <= blockSize-1; i++){
