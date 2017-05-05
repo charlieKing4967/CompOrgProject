@@ -499,7 +499,7 @@ void memory_access(EXMEM_Reg *EXMEM,MEMWB_Reg *MEMWB){
   }
   // Write to memory
   if(EXMEM->MemWrite){
-    uint32_t data = dataMemoryRead(EXMEM->aluResult>>2);
+    uint32_t data = dataShadowRead(EXMEM->aluResult>>2);
     //uint32_t data = Memory[EXMEM->aluResult>>2];
     // Write Bytes
     if(EXMEM->ByteData){
