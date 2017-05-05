@@ -1,10 +1,7 @@
 #include "regDefs.h"
 #include "cacheFuncs.h"
-#include <iostream>
+
 IDEX_Reg zeroReg;
-
-using namespace std;
-
 
 void instruction_fetch(IFID_Reg *IFID){
   uint32_t instruction = programMemoryRead();

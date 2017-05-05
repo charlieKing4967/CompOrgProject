@@ -2,9 +2,6 @@ unsigned int pc;
 bool stall;
 bool IFflush;
 int stallCount;
-int test1;
-int test2;
-int test3;
 
 int cycles;
 int instructions;
