@@ -17,7 +17,7 @@ int main(){
   // Read program
   readProgram(Memory, "Program2File1.txt");
 
-  // set up sp, fp, & pc
+  // Set up sp, fp, & pc
   registers[29] = Memory[0];
   registers[30]= Memory[1];
   pc = Memory[5];
