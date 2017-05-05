@@ -1,5 +1,5 @@
 #include "regDefs.h"
-#include "cacheFunctions.h"
+#include "cacheFuncs.h"
 #include <iostream>
 IDEX_Reg zeroReg;
 
