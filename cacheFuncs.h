@@ -1,7 +1,7 @@
-#define iCacheSize 256/4
-#define dCacheSize 128/4
-#define blockSize 1
 #define writeBack 1
+#define blockSize 4
+#define iCacheSize 128/blockSize/4
+#define dCacheSize 256/blockSize/4
 
 bool iValid[iCacheSize];
 int iTag[iCacheSize];
