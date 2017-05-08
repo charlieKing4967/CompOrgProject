@@ -1,5 +1,4 @@
 #include <cstdint>
-#include "util.h"
 #include "pipeFuncs.h"
 #include "readFunc.h"
 #include <iostream>
